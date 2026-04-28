@@ -8,11 +8,29 @@ interface Ctx {
   outHTML: (html: string, cls?: string) => void;
   gap: () => void;
   scrollBottom: () => void;
+  getCwd: () => string;
+  getPrevCwd: () => string;
+  setCwd: (path: string) => void;
+}
+
+const FS: Record<string, string[]> = {
+  '~': ['blog/'],
+  '~/blog': [],
+};
+
+function resolveDir(cwd: string, target: string): string | null {
+  const t = target.replace(/\/+$/, '');
+  if (!t || t === '~') return '~';
+  if (t === '..') return cwd === '~' ? '~' : cwd.slice(0, cwd.lastIndexOf('/'));
+  const abs = t.startsWith('~') ? t : `${cwd}/${t}`;
+  return abs in FS ? abs : null;
 }
 
 export function createCommands(ctx: Ctx) {
-  const { postData, output, out, outHTML, gap } = ctx;
+  const { postData, output, out, outHTML, gap, getCwd, getPrevCwd, setCwd } = ctx;
   const base = import.meta.env.BASE_URL;
+
+  FS['~/blog'] = postData.map((p) => p.slug + '.md');
 
   function listPosts() {
     if (postData.length === 0) {
@@ -63,6 +81,8 @@ export function createCommands(ctx: Ctx) {
         ['blog <slug>', 'Open a post'],
         ['open <slug>', 'Open a post (alias)'],
         ['social', 'Links — GitHub, LinkedIn, email'],
+        ['ls [path]', 'List directory contents'],
+        ['cd [path]', 'Change directory'],
         ['clear', 'Clear the terminal'],
         ['date', 'Print current date'],
         ['echo <text>', 'Echo text'],
@@ -105,10 +125,10 @@ export function createCommands(ctx: Ctx) {
 
     social(_args: string[]) {
       outHTML(
-        'GitHub    <a href="https://github.com/apopov" target="_blank" rel="noopener">github.com/apopov</a>'
+        'GitHub    <a href="https://github.com/kauz" target="_blank" rel="noopener">github.com/apopov</a>'
       );
       outHTML(
-        'LinkedIn  <a href="https://linkedin.com/in/apopov" target="_blank" rel="noopener">linkedin.com/in/apopov</a>'
+        'LinkedIn  <a href="https://www.linkedin.com/in/artyom-popov/" target="_blank" rel="noopener">linkedin.com/in/apopov</a>'
       );
       outHTML('Email     <a href="mailto:hello@apopov.dev">hello@apopov.dev</a>');
     },
@@ -129,12 +149,45 @@ export function createCommands(ctx: Ctx) {
         minute: '2-digit',
         second: '2-digit',
         hour12: true,
-        timeZoneName: 'short'
+        timeZoneName: 'short',
       };
-      const formattedDate = new Intl.DateTimeFormat('en-GB', options).format(new Date())
+      const formattedDate = new Intl.DateTimeFormat('en-GB', options)
+        .format(new Date())
         .replace(',', '');
 
       out(formattedDate);
+    },
+
+    ls(args: string[]) {
+      const target = args[0];
+      const dir = target ? resolveDir(getCwd(), target) : getCwd();
+      if (dir === null) {
+        out(`ls: ${args[0]}: No such file or directory`, 'out-err');
+        return;
+      }
+      const entries = FS[dir];
+      if (entries.length === 0) {
+        return;
+      }
+      const dirs = entries.filter((e) => e.endsWith('/'));
+      const files = entries.filter((e) => !e.endsWith('/'));
+      if (dirs.length)
+        outHTML(dirs.map((d) => `<span style="color:var(--green)">${d}</span>`).join('  '));
+      if (files.length) out(files.join('  '));
+    },
+
+    cd(args: string[]) {
+      const target = args[0] ?? '~';
+      if (target === '-') {
+        setCwd(getPrevCwd());
+        return;
+      }
+      const dir = resolveDir(getCwd(), target);
+      if (dir === null) {
+        out(`cd: ${target}: No such file or directory`, 'out-err');
+        return;
+      }
+      setCwd(dir);
     },
 
     echo(args: string[]) {

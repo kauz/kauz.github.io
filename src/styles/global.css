@@ -51,8 +51,8 @@ a:hover {
 /* ── Terminal window chrome ────────────────────────────── */
 .t-win {
   width: 100%;
-  height: calc(100vh - 3rem);
-  height: calc(100dvh - 3rem);
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--win-bg);
@@ -86,7 +86,7 @@ a:hover {
 
 .t-btn {
   color: var(--fg-dim);
-  font-size: 0.75rem;
+  font-size: 1rem;
   padding: 0 0.35rem;
   cursor: default;
   line-height: 1.4;
@@ -166,6 +166,7 @@ a:hover {
   height: 1.15em;
   background: var(--green);
   vertical-align: text-bottom;
+  transform: translateX(-4px);
   animation: blink 1.1s step-end infinite;
 }
 

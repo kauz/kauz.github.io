@@ -1,8 +1,6 @@
-const PROMPT = 'apopov.dev:~$';
-
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export function createHelpers(output: HTMLElement, termBody: HTMLElement) {
+export function createHelpers(output: HTMLElement, termBody: HTMLElement, getPrompt: () => string) {
   function el(tag: string, cls?: string, text?: string): HTMLElement {
     const d = document.createElement(tag);
     if (cls) d.className = cls;
@@ -30,8 +28,8 @@ export function createHelpers(output: HTMLElement, termBody: HTMLElement) {
 
   function echoCmd(cmd: string) {
     const row = el('div', 'cmd-line');
-    row.appendChild(el('span', 'prompt', PROMPT));
-    row.appendChild(el('span', '', ' ' + cmd));
+    row.appendChild(el('span', 'prompt', getPrompt()));
+    row.appendChild(el('span', '', cmd));
     output.appendChild(row);
   }
 

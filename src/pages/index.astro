@@ -21,15 +21,28 @@ const postData = posts.map((p) => ({
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>apopov.dev</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/assets/pwa-192.png" />
   </head>
   <body>
     <div class="t-win">
       <div class="t-bar">
         <span class="t-title">apopov@dev: ~</span>
         <div class="t-btns">
-          <span class="t-btn">─</span>
-          <span class="t-btn">□</span>
-          <span class="t-btn">✕</span>
+          <span
+            class="t-btn"
+            onclick="  window.resizeTo(window.screen.availWidth / 2, window.screen.availHeight / 2)"
+            >─</span
+          >
+          <span
+            class="t-btn"
+            onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()"
+            >□</span
+          >
+          <span class="t-btn" onclick="window.close()">✕</span>
         </div>
       </div>
 
@@ -37,7 +50,7 @@ const postData = posts.map((p) => ({
         <div id="terminal" data-posts={JSON.stringify(postData)}>
           <div id="output"></div>
           <div class="input-row">
-            <span class="prompt">apopov.dev:~$</span>
+            <span id="prompt" class="prompt">apopov.dev:~$</span>
             <span id="cmd-typed"></span><span class="cursor" id="blink-cursor"></span>
           </div>
         </div>
@@ -56,128 +69,8 @@ const postData = posts.map((p) => ({
     />
 
     <script>
-      import { createHelpers } from '../lib/terminal';
-      import { createCommands } from '../lib/commands';
-
-      const termBody = document.getElementById('t-body') as HTMLElement;
-      const output = document.getElementById('output') as HTMLElement;
-      const input = document.getElementById('cmd-input') as HTMLInputElement;
-      const cmdTyped = document.getElementById('cmd-typed') as HTMLElement;
-      const blinkCursor = document.getElementById('blink-cursor') as HTMLElement;
-      const postData = JSON.parse(
-        (document.getElementById('terminal') as HTMLElement).dataset.posts ?? '[]'
-      );
-
-      const history: string[] = [];
-      let histIdx = -1;
-      let cursorTimer: ReturnType<typeof setTimeout>;
-      let booting = true;
-
-      const { out, outHTML, gap, scrollBottom, echoCmd, typewrite } = createHelpers(
-        output,
-        termBody
-      );
-
-      const COMMANDS = createCommands({ postData, output, out, outHTML, gap, scrollBottom });
-
-      // ── Display sync ───────────────────────────────────────────────
-
-      function syncDisplay() {
-        cmdTyped.textContent = input.value;
-      }
-
-      input.addEventListener('input', () => {
-        syncDisplay();
-        blinkCursor.classList.add('is-paused');
-        clearTimeout(cursorTimer);
-        cursorTimer = setTimeout(() => blinkCursor.classList.remove('is-paused'), 600);
-      });
-
-      input.addEventListener('blur', () => blinkCursor.classList.add('is-hidden'));
-      input.addEventListener('focus', () => blinkCursor.classList.remove('is-hidden'));
-
-      // ── Execute ────────────────────────────────────────────────────
-
-      function execute(raw: string) {
-        const parts = raw.trim().split(/\s+/);
-        const command = parts[0].toLowerCase() as keyof typeof COMMANDS;
-        const args = parts.slice(1);
-
-        if (!command) return;
-
-        if (command in COMMANDS) {
-          COMMANDS[command](args);
-        } else {
-          out('bash: ' + command + ': command not found', 'out-err');
-        }
-
-        gap();
-        scrollBottom();
-      }
-
-      // ── Input handling ─────────────────────────────────────────────
-
-      input.addEventListener('keydown', (e) => {
-        if (booting) return;
-        if (e.key === 'Enter') {
-          const raw = input.value;
-          echoCmd(raw);
-          input.value = '';
-          syncDisplay();
-          if (raw.trim()) {
-            history.unshift(raw.trim());
-            histIdx = -1;
-          }
-          execute(raw);
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (histIdx < history.length - 1) {
-            histIdx++;
-            input.value = history[histIdx];
-            syncDisplay();
-          }
-        } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (histIdx > 0) {
-            histIdx--;
-            input.value = history[histIdx];
-          } else {
-            histIdx = -1;
-            input.value = '';
-          }
-          syncDisplay();
-        } else if (e.key === 'Tab') {
-          e.preventDefault();
-          const val = input.value;
-          if (val.includes(' ')) return; // only complete the command word
-          const matches = Object.keys(COMMANDS).filter((cmd) => cmd.startsWith(val));
-          if (matches.length === 1) {
-            input.value = matches[0] + ' ';
-            syncDisplay();
-          } else if (matches.length > 1) {
-            echoCmd(val);
-            out(matches.join('    '), 'out-dim');
-            gap();
-            scrollBottom();
-          }
-        }
-      });
-
-      document.addEventListener('click', () => input.focus());
-
-      // ── Welcome (typewriter) ───────────────────────────────────────
-
-      blinkCursor.classList.add('is-hidden');
-
-      await typewrite([
-        ['apopov.dev — software engineer', 'out'],
-        ['──────────────────────────────', 'out-dim'],
-        ["Type 'help' to see available commands.", 'out-dim'],
-      ]);
-
-      booting = false;
-      blinkCursor.classList.remove('is-hidden');
-      input.focus();
+      import { boot } from '../lib/app';
+      await boot();
     </script>
   </body>
 </html>

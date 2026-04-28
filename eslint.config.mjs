@@ -14,6 +14,18 @@ export default tseslint.config(
     },
   },
   {
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        clients: 'readonly',
+        fetch: 'readonly',
+        Response: 'readonly',
+      },
+    },
+  },
+  {
     ignores: ['dist/**', '.astro/**', 'node_modules/**'],
   }
 );

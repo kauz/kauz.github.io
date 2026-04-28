@@ -116,16 +116,31 @@ export async function boot() {
     } else if (e.key === 'Tab') {
       e.preventDefault();
       const val = input.value;
-      if (val.includes(' ')) return;
-      const matches = Object.keys(COMMANDS).filter((cmd) => cmd.startsWith(val));
-      if (matches.length === 1) {
-        input.value = matches[0] + ' ';
-        syncDisplay();
-      } else if (matches.length > 1) {
-        echoCmd(val);
-        out(matches.join('    '), 'out-dim');
-        gap();
-        scrollBottom();
+      const spaceIdx = val.indexOf(' ');
+      if (spaceIdx === -1) {
+        const matches = Object.keys(COMMANDS).filter((cmd) => cmd.startsWith(val));
+        if (matches.length === 1) {
+          input.value = matches[0] + ' ';
+          syncDisplay();
+        } else if (matches.length > 1) {
+          echoCmd(val);
+          out(matches.join('    '), 'out-dim');
+          gap();
+          scrollBottom();
+        }
+      } else {
+        const cmd = val.slice(0, spaceIdx).toLowerCase();
+        const partial = val.slice(spaceIdx + 1);
+        const matches = COMMANDS.complete(cmd, partial);
+        if (matches.length === 1) {
+          input.value = cmd + ' ' + matches[0];
+          syncDisplay();
+        } else if (matches.length > 1) {
+          echoCmd(val);
+          out(matches.join('    '), 'out-dim');
+          gap();
+          scrollBottom();
+        }
       }
     }
   });

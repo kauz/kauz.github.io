@@ -193,6 +193,16 @@ export function createCommands(ctx: Ctx) {
     echo(args: string[]) {
       out(args.join(' '));
     },
+
+    complete(cmd: string, partial: string): string[] {
+      if (cmd === 'blog' || cmd === 'open') {
+        return postData.map((p) => p.slug).filter((s) => s.startsWith(partial));
+      }
+      if (cmd === 'cd' || cmd === 'ls') {
+        return (FS[getCwd()] ?? []).filter((e) => e.startsWith(partial));
+      }
+      return [];
+    },
   };
 }
 

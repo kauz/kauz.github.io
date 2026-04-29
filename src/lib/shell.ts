@@ -28,8 +28,6 @@ const COMMAND_NAMES = [
   'theme',
 ] as const;
 
-type CommandName = (typeof COMMAND_NAMES)[number];
-
 export class Shell {
   private readonly postData: Post[];
   private readonly output: IOutput;
@@ -67,7 +65,7 @@ export class Shell {
   }
 
   dispatch(name: string, args: string[]): boolean {
-    switch (name as CommandName) {
+    switch (name) {
       case 'help':
         this.help(args);
         break;
@@ -106,6 +104,12 @@ export class Shell {
         break;
       case 'theme':
         this.theme(args);
+        break;
+      case 'sudo':
+        this.sudo(args);
+        break;
+      case 'rm':
+        this.rm(args);
         break;
       default:
         return false;
@@ -283,6 +287,19 @@ export class Shell {
 
   private echo(args: string[]): void {
     this.output.out(args.join(' '));
+  }
+
+  private sudo(_args: string[]): void {
+    this.output.out("I'm sorry, Dave. I'm afraid I can't do that.", 'out-err');
+  }
+
+  private rm(args: string[]): void {
+    const recursive = args.some((a) => /^-[a-z]*r/i.test(a) || a === '--recursive');
+    if (recursive) {
+      this.output.out("I'm sorry, Dave. I'm afraid I can't do that.", 'out-err');
+    } else {
+      this.output.out('rm: missing operand', 'out-err');
+    }
   }
 
   private theme(args: string[]): void {

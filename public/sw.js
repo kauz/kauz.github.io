@@ -1,6 +1,13 @@
 const CACHE = 'apopov-dev-v1';
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    fetch('/cache-manifest.json')
+      .then((r) => r.json())
+      .then((urls) => caches.open(CACHE).then((cache) => cache.addAll(['/', ...urls])))
+      .then(() => self.skipWaiting())
+  );
+});
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(

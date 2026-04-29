@@ -134,6 +134,20 @@ export class App {
         this.input.value = '';
       }
       this.syncDisplay();
+    } else if (e.key === 'c' && e.ctrlKey) {
+      e.preventDefault();
+      this.terminal.echoCmd(this.input.value + '^C');
+      this.input.value = '';
+      this.histIdx = -1;
+      this.syncDisplay();
+      this.terminal.gap();
+      this.terminal.scrollBottom();
+    } else if (e.key === 'Escape') {
+      this.input.value = '';
+      this.syncDisplay();
+    } else if (e.key === 'l' && e.ctrlKey) {
+      e.preventDefault();
+      this.terminal.clear();
     } else if (e.key === 'Tab') {
       e.preventDefault();
       const val = this.input.value;

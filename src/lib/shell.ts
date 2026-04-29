@@ -9,6 +9,9 @@ interface Ctx {
   onCwdChange: () => void;
 }
 
+const THEMES = ['default', 'high-contrast', 'deuteranopia', 'solarized-light'] as const;
+type Theme = (typeof THEMES)[number];
+
 const COMMAND_NAMES = [
   'help',
   'about',
@@ -22,6 +25,7 @@ const COMMAND_NAMES = [
   'ls',
   'cd',
   'echo',
+  'theme',
 ] as const;
 
 type CommandName = (typeof COMMAND_NAMES)[number];
@@ -34,6 +38,7 @@ export class Shell {
   private readonly base: string;
   private readonly fs: Record<string, string[]>;
   private readonly slugs: string[];
+  private readonly completions: Record<string, () => string[]>;
   private cwd = '~';
   private prevCwd = '~';
 
@@ -47,6 +52,13 @@ export class Shell {
     this.fs = {
       '~': ['blog/'],
       '~/blog': this.slugs.map((s) => s + '.md'),
+    };
+    this.completions = {
+      blog: () => this.slugs,
+      open: () => this.slugs,
+      cd: () => this.fs[this.cwd] ?? [],
+      ls: () => this.fs[this.cwd] ?? [],
+      theme: () => [...THEMES],
     };
   }
 
@@ -92,6 +104,9 @@ export class Shell {
       case 'echo':
         this.echo(args);
         break;
+      case 'theme':
+        this.theme(args);
+        break;
       default:
         return false;
     }
@@ -103,13 +118,9 @@ export class Shell {
   }
 
   complete(cmd: string, partial: string): string[] {
-    const candidates =
-      cmd === 'blog' || cmd === 'open'
-        ? this.slugs
-        : cmd === 'cd' || cmd === 'ls'
-          ? (this.fs[this.cwd] ?? [])
-          : null;
-    return candidates ? candidates.filter((s) => s.startsWith(partial)) : [];
+    const getCandidates = this.completions[cmd];
+    if (!getCandidates) return [];
+    return getCandidates().filter((s) => s.startsWith(partial));
   }
 
   private resolveDir(target: string): string | null {
@@ -168,6 +179,7 @@ export class Shell {
       ['clear', 'Clear the terminal'],
       ['date', 'Print current date'],
       ['echo <text>', 'Echo text'],
+      ['theme [name]', 'List or switch color themes'],
     ];
     this.output.out('Available commands:');
     rows.forEach(([cmd, desc]) => this.output.out('  ' + cmd.padEnd(22) + desc));
@@ -271,5 +283,31 @@ export class Shell {
 
   private echo(args: string[]): void {
     this.output.out(args.join(' '));
+  }
+
+  private theme(args: string[]): void {
+    const name = args[0];
+    if (!name) {
+      this.output.out('Available themes:');
+      THEMES.forEach((t) => {
+        const active = (document.documentElement.dataset.theme ?? 'default') === t;
+        this.output.out('  ' + t + (active ? '  ← active' : ''));
+      });
+      this.output.out('Usage: theme <name>', 'out-dim');
+      return;
+    }
+    if (!THEMES.includes(name as Theme)) {
+      this.output.out('Unknown theme: ' + name, 'out-err');
+      this.output.out('Available: ' + THEMES.join(', '), 'out-dim');
+      return;
+    }
+    if (name === 'default') {
+      delete document.documentElement.dataset.theme;
+      localStorage.removeItem('term-theme');
+    } else {
+      document.documentElement.dataset.theme = name;
+      localStorage.setItem('term-theme', name);
+    }
+    this.output.out('Theme: ' + name);
   }
 }

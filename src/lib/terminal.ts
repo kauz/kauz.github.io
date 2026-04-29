@@ -1,6 +1,8 @@
+import type { IOutput } from './types.ts';
+
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export class Terminal {
+export class Terminal implements IOutput {
   private readonly output: HTMLElement;
   private readonly termBody: HTMLElement;
   private readonly getPrompt: () => string;

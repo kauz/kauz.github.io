@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import BaseLayout from './BaseLayout.astro';
 
 interface Props {
   title: string;
@@ -9,31 +9,17 @@ const { title, date } = Astro.props;
 const dateStr = date.toISOString().slice(0, 10);
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} — apopov.dev</title>
-    <link rel="icon" type="image/png" href="/assets/favicon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#111111" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/assets/pwa-192.png" />
-  </head>
-  <body>
-    <div class="blog-wrap">
-      <a class="back" href={import.meta.env.BASE_URL}>← back to terminal</a>
-      <article>
-        <header class="post-header">
-          <h1>{title}</h1>
-          <time datetime={dateStr}>{dateStr}</time>
-        </header>
-        <div class="prose">
-          <slot />
-        </div>
-      </article>
-    </div>
-  </body>
-</html>
+<BaseLayout title={`${title} — apopov.dev`}>
+  <div class="blog-wrap">
+    <a class="back" href={import.meta.env.BASE_URL}>← back to terminal</a>
+    <article>
+      <header class="post-header">
+        <h1>{title}</h1>
+        <time datetime={dateStr}>{dateStr}</time>
+      </header>
+      <div class="prose">
+        <slot />
+      </div>
+    </article>
+  </div>
+</BaseLayout>

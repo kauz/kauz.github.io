@@ -1,57 +1,44 @@
 import { Terminal } from './terminal';
-import { Commands } from './commands';
-import type { IVisitor } from './visitor.ts';
+import { Shell } from './shell';
+import type { IVisitor, IAppElements } from './types';
 
 export class App {
   public visitor: IVisitor;
   private terminal!: Terminal;
-  private commands!: Commands;
+  private shell!: Shell;
   private history: string[] = [];
   private histIdx = -1;
   private cursorTimer!: ReturnType<typeof setTimeout>;
   private booting = true;
-  private cwd = '~';
-  private prevCwd = '~';
 
-  private input!: HTMLInputElement;
-  private cmdTyped!: HTMLElement;
-  private blinkCursor!: HTMLElement;
-  private promptEl!: HTMLElement;
+  private input: HTMLInputElement;
+  private cmdTyped: HTMLElement;
+  private blinkCursor: HTMLElement;
+  private promptEl: HTMLElement;
+  private titleEl: HTMLElement;
 
-  constructor(visitor: IVisitor) {
+  constructor(visitor: IVisitor, elements: IAppElements) {
     this.visitor = visitor;
-  }
+    this.input = elements.input;
+    this.cmdTyped = elements.cmdTyped;
+    this.blinkCursor = elements.blinkCursor;
+    this.promptEl = elements.promptEl;
+    this.titleEl = elements.titleEl;
 
-  async boot(): Promise<void> {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' });
-      });
-    }
-
-    const termBody = document.getElementById('t-body') as HTMLElement;
-    const output = document.getElementById('output') as HTMLElement;
-    this.input = document.getElementById('cmd-input') as HTMLInputElement;
-    this.cmdTyped = document.getElementById('cmd-typed') as HTMLElement;
-    this.blinkCursor = document.getElementById('blink-cursor') as HTMLElement;
-    this.promptEl = document.getElementById('prompt') as HTMLElement;
-    const postData = JSON.parse(
-      (document.getElementById('terminal') as HTMLElement).dataset.posts ?? '[]'
-    );
-
-    this.promptEl.textContent = this.getPrompt();
-
-    this.terminal = new Terminal(output, termBody, () => this.getPrompt());
-    this.commands = new Commands({
-      postData,
-      out: this.terminal.out.bind(this.terminal),
-      outHTML: this.terminal.outHTML.bind(this.terminal),
-      gap: this.terminal.gap.bind(this.terminal),
-      clear: this.terminal.clear.bind(this.terminal),
-      getCwd: () => this.cwd,
-      getPrevCwd: () => this.prevCwd,
-      setCwd: this.setCwd.bind(this),
+    this.terminal = new Terminal(elements.output, elements.termBody, () => this.shell.getPrompt());
+    this.shell = new Shell({
+      postData: elements.postData,
+      output: this.terminal,
+      visitorSlug: visitor.slug,
+      onCwdChange: () => {
+        const prompt = this.shell.getPrompt();
+        this.promptEl.textContent = prompt;
+        this.titleEl.textContent = prompt.slice(0, -1);
+      },
     });
+
+    this.promptEl.textContent = this.shell.getPrompt();
+    this.titleEl.textContent = this.shell.getPrompt().slice(0, -1);
 
     this.input.addEventListener('input', () => {
       this.syncDisplay();
@@ -66,6 +53,14 @@ export class App {
     document.addEventListener('click', () => this.input.focus());
 
     this.blinkCursor.classList.add('is-hidden');
+  }
+
+  async boot(): Promise<void> {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      });
+    }
 
     await this.terminal.typewrite([
       ['Artem Popov — Software Engineer', 'out'],
@@ -76,16 +71,6 @@ export class App {
     this.booting = false;
     this.blinkCursor.classList.remove('is-hidden');
     this.input.focus();
-  }
-
-  private getPrompt(): string {
-    return `${this.visitor.slug}@holonet:${this.cwd}$`;
-  }
-
-  private setCwd(path: string): void {
-    this.prevCwd = this.cwd;
-    this.cwd = path;
-    this.promptEl.textContent = this.getPrompt();
   }
 
   private syncDisplay(): void {
@@ -99,7 +84,7 @@ export class App {
 
     if (!name) return;
 
-    if (!this.commands.dispatch(name, args)) {
+    if (!this.shell.dispatch(name, args)) {
       this.terminal.out('bash: ' + name + ': command not found', 'out-err');
     }
 
@@ -154,11 +139,11 @@ export class App {
       const val = this.input.value;
       const spaceIdx = val.indexOf(' ');
       if (spaceIdx === -1) {
-        const matches = this.commands.commandNames().filter((cmd) => cmd.startsWith(val));
+        const matches = this.shell.commandNames().filter((cmd) => cmd.startsWith(val));
         this.applyCompletion(matches, matches[0] + ' ');
       } else {
         const cmd = val.slice(0, spaceIdx).toLowerCase();
-        const matches = this.commands.complete(cmd, val.slice(spaceIdx + 1));
+        const matches = this.shell.complete(cmd, val.slice(spaceIdx + 1));
         this.applyCompletion(matches, cmd + ' ' + matches[0]);
       }
     }

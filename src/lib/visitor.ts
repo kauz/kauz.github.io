@@ -1,3 +1,5 @@
+import type { IVisitor } from './types.ts';
+
 const NAMES = [
   // Original trilogy
   'Luke Skywalker',
@@ -112,12 +114,7 @@ const NAMES = [
   'Darth Bane',
 ];
 
-export interface IVisitor {
-  name: string;
-  slug: string;
-}
-
-export class Visitor {
+export class Visitor implements IVisitor {
   name: string;
   slug: string;
   private static readonly STORAGE_KEY: string = 'sw-visitor';

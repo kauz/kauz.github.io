@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
@@ -14,67 +14,54 @@ const postData = posts.map((p) => ({
 }));
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>apopov.dev</title>
-    <link rel="icon" type="image/png" href="/assets/favicon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#111111" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/assets/pwa-192.png" />
-  </head>
-  <body>
-    <div class="t-win">
-      <div class="t-bar">
-        <span class="t-title">apopov@dev: ~</span>
-        <div class="t-btns">
-          <span
-            class="t-btn"
-            onclick="  window.resizeTo(window.screen.availWidth / 2, window.screen.availHeight / 2)"
-            >─</span
-          >
-          <span
-            class="t-btn"
-            onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()"
-            >□</span
-          >
-          <span class="t-btn" onclick="window.close()">✕</span>
-        </div>
-      </div>
-
-      <div class="t-body" id="t-body">
-        <div id="terminal" data-posts={JSON.stringify(postData)}>
-          <div id="output"></div>
-          <div class="input-row">
-            <span id="prompt" class="prompt"></span>
-            <span id="cmd-typed"></span><span class="cursor" id="blink-cursor"></span>
-          </div>
-        </div>
+<BaseLayout title="apopov.dev">
+  <div class="t-win">
+    <div class="t-bar">
+      <span class="t-title" id="t-title"></span>
+      <div class="t-btns">
+        <span
+          class="t-btn"
+          onclick="  window.resizeTo(window.screen.availWidth / 2, window.screen.availHeight / 2)"
+          >─</span
+        >
+        <span
+          class="t-btn"
+          onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()"
+          >□</span
+        >
+        <span class="t-btn" onclick="window.close()">✕</span>
       </div>
     </div>
 
-    <input
-      id="cmd-input"
-      type="text"
-      autocomplete="off"
-      autocorrect="off"
-      autocapitalize="off"
-      spellcheck="false"
-      autofocus
-      aria-label="Terminal input"
-    />
+    <div class="t-body" id="t-body">
+      <div id="terminal" data-posts={JSON.stringify(postData)}>
+        <div id="output"></div>
+        <div class="input-row">
+          <span id="prompt" class="prompt"></span>
+          <span id="cmd-typed"></span><span class="cursor" id="blink-cursor"></span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-      import { App } from '../lib/app';
-      import { Visitor } from '../lib/visitor';
+  <input
+    id="cmd-input"
+    type="text"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+    autofocus
+    aria-label="Terminal input"
+  />
 
-      const visitor = await Visitor.create();
-      const app = new App(visitor);
-      await app.boot();
-    </script>
-  </body>
-</html>
+  <script>
+    import { App } from '../lib/app';
+    import { Visitor } from '../lib/visitor';
+    import { selectElements } from '../lib/elements';
+
+    const visitor = await Visitor.create();
+    const app = new App(visitor, selectElements());
+    await app.boot();
+  </script>
+</BaseLayout>

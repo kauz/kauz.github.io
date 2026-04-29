@@ -1,55 +1,67 @@
-export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export function createHelpers(output: HTMLElement, termBody: HTMLElement, getPrompt: () => string) {
-  function el(tag: string, cls?: string, text?: string): HTMLElement {
+export class Terminal {
+  private readonly output: HTMLElement;
+  private readonly termBody: HTMLElement;
+  private readonly getPrompt: () => string;
+
+  constructor(output: HTMLElement, termBody: HTMLElement, getPrompt: () => string) {
+    this.output = output;
+    this.termBody = termBody;
+    this.getPrompt = getPrompt;
+  }
+
+  private el(tag: string, cls?: string, text?: string): HTMLElement {
     const d = document.createElement(tag);
     if (cls) d.className = cls;
     if (text !== undefined) d.textContent = text;
     return d;
   }
 
-  function out(text: string, cls = 'out') {
-    output.appendChild(el('div', cls, text));
+  out(text: string, cls = 'out'): void {
+    this.output.appendChild(this.el('div', cls, text));
   }
 
-  function outHTML(html: string, cls = 'out') {
-    const d = el('div', cls);
+  outHTML(html: string, cls = 'out'): void {
+    const d = this.el('div', cls);
     d.innerHTML = html;
-    output.appendChild(d);
+    this.output.appendChild(d);
   }
 
-  function gap() {
-    output.appendChild(el('div', 'gap'));
+  gap(): void {
+    this.output.appendChild(this.el('div', 'gap'));
   }
 
-  function scrollBottom() {
-    termBody.scrollTop = termBody.scrollHeight;
+  scrollBottom(): void {
+    this.termBody.scrollTop = this.termBody.scrollHeight;
   }
 
-  function echoCmd(cmd: string) {
-    const row = el('div', 'cmd-line');
-    row.appendChild(el('span', 'prompt', getPrompt()));
-    row.appendChild(el('span', '', cmd));
-    output.appendChild(row);
+  clear(): void {
+    this.output.innerHTML = '';
   }
 
-  async function typewrite(lines: [string | null, string?][], charMs = 15) {
+  echoCmd(cmd: string): void {
+    const row = this.el('div', 'cmd-line');
+    row.appendChild(this.el('span', 'prompt', this.getPrompt()));
+    row.appendChild(this.el('span', '', cmd));
+    this.output.appendChild(row);
+  }
+
+  async typewrite(lines: [string | null, string?][], charMs = 15): Promise<void> {
     for (const [text, cls] of lines) {
       if (text === null) {
-        gap();
+        this.gap();
         await sleep(80);
         continue;
       }
-      const d = el('div', cls);
-      output.appendChild(d);
+      const d = this.el('div', cls);
+      this.output.appendChild(d);
       for (const ch of text) {
         d.textContent += ch;
         await sleep(charMs);
       }
-      scrollBottom();
+      this.scrollBottom();
       await sleep(110);
     }
   }
-
-  return { out, outHTML, gap, scrollBottom, echoCmd, typewrite };
 }

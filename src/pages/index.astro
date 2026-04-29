@@ -23,7 +23,7 @@ const postData = posts.map((p) => ({
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#111111" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/assets/pwa-192.png" />
   </head>
@@ -50,7 +50,7 @@ const postData = posts.map((p) => ({
         <div id="terminal" data-posts={JSON.stringify(postData)}>
           <div id="output"></div>
           <div class="input-row">
-            <span id="prompt" class="prompt">apopov.dev:~$</span>
+            <span id="prompt" class="prompt"></span>
             <span id="cmd-typed"></span><span class="cursor" id="blink-cursor"></span>
           </div>
         </div>
@@ -69,8 +69,12 @@ const postData = posts.map((p) => ({
     />
 
     <script>
-      import { boot } from '../lib/app';
-      await boot();
+      import { App } from '../lib/app';
+      import { Visitor } from '../lib/visitor';
+
+      const visitor = await Visitor.create();
+      const app = new App(visitor);
+      await app.boot();
     </script>
   </body>
 </html>

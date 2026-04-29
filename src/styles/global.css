@@ -48,6 +48,7 @@
   --font: 'Courier New', Courier, 'Lucida Console', monospace;
   --fs: 0.95rem;
   --lh: 1.6;
+  --scrollbar: #333;
 }
 
 /* ── Base ──────────────────────────────────────────────── */
@@ -136,7 +137,7 @@ a:hover {
   padding: 1.2rem 1.5rem;
   cursor: text;
   scrollbar-width: thin;
-  scrollbar-color: #333 transparent;
+  scrollbar-color: var(--scrollbar) transparent;
 }
 
 .t-body::-webkit-scrollbar {
@@ -146,7 +147,7 @@ a:hover {
   background: transparent;
 }
 .t-body::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--scrollbar);
   border-radius: 3px;
 }
 
@@ -341,6 +342,19 @@ a:hover {
 }
 
 /* ── Themes ──────────────────────────────────────────────── */
+
+/* Light */
+[data-theme='light'] {
+  --bg: #f0f0f0;
+  --win-bg: #ffffff;
+  --bar-bg: #e4e4e4;
+  --border: #cccccc;
+  --fg: #1a1a1a;
+  --fg-dim: #888888;
+  --green: #1a7f37;
+  --red: #d1242f;
+  --scrollbar: #bbb;
+}
 
 /* High contrast: WCAG AAA–friendly yellow-on-black */
 [data-theme='high-contrast'] {

@@ -9,7 +9,7 @@ interface Ctx {
   onCwdChange: () => void;
 }
 
-const THEMES = ['default', 'high-contrast', 'deuteranopia', 'solarized-light'] as const;
+const THEMES = ['default', 'light', 'high-contrast', 'deuteranopia', 'solarized-light'] as const;
 type Theme = (typeof THEMES)[number];
 
 const COMMAND_NAMES = [

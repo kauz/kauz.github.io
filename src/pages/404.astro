@@ -1,17 +1,158 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="404 — apopov.dev">
-  <div class="blog-wrap">
-    <a class="back" href={import.meta.env.BASE_URL}>← back to terminal</a>
-    <article>
-      <header class="post-header">
-        <h1>404</h1>
-      </header>
-      <div class="prose">
-        <p>This is not the web page you are looking for.</p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404 — Signal Lost in the Outer Rim</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/png" href="/assets/favicon.png" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: 100%; height: 100%; overflow: hidden;
+        background:
+          radial-gradient(ellipse 120% 60% at 65% 100%, #A04010 0%, #5A1E00 28%, transparent 60%),
+          radial-gradient(ellipse 80% 50% at 30% 100%, #7A2800 0%, transparent 50%),
+          linear-gradient(to top, #1E0800 0%, #2A0D1A 40%, #0A0514 70%, #060310 100%);
+      }
+
+      #loader {
+        position: fixed; inset: 0; z-index: 100;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        background: #06030F;
+        transition: opacity 0.8s ease;
+        pointer-events: none;
+      }
+      .loader-ring {
+        width: 48px; height: 48px;
+        border: 2px solid rgba(196,146,42,0.2);
+        border-top-color: #C4922A;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .loader-text {
+        font-family: 'Cinzel', serif;
+        font-size: 10px; letter-spacing: 4px;
+        color: rgba(196,146,42,0.7);
+      }
+
+      #ui {
+        position: fixed; inset: 0; z-index: 10;
+        display: flex; flex-direction: column;
+        pointer-events: none;
+      }
+
+      #main-content {
+        flex: 1; display: flex; flex-direction: column;
+        justify-content: center;
+        padding: 0 56px;
+        max-width: 480px;
+      }
+
+      .tag-404 {
+        font-family: 'Cinzel', serif; font-size: 11px;
+        letter-spacing: 6px; color: #C4922A;
+        margin-bottom: 10px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .tag-404::before, .tag-404::after { content: '—'; }
+
+      h1 {
+        font-family: 'Cinzel', serif; font-weight: 900;
+        font-size: clamp(26px, 4.5vw, 50px);
+        color: #FFFFFF; line-height: 1.08;
+        margin-bottom: 18px;
+        text-shadow: 0 0 50px rgba(180,80,10,0.6);
+      }
+
+      .btn {
+        font-family: 'Cinzel', serif; font-size: 10px;
+        letter-spacing: 2px; padding: 11px 18px;
+        text-decoration: none; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+      }
+      .btn-primary {
+        background: rgba(196,146,42,0.12);
+        border: 1px solid rgba(196,146,42,0.65);
+        color: #C4922A;
+      }
+      .btn-primary:hover {
+        background: rgba(196,146,42,0.25);
+        box-shadow: 0 0 22px rgba(196,146,42,0.35);
+      }
+      .btn-secondary {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.18);
+        color: rgba(255,255,255,0.65);
+      }
+      .btn-secondary:hover { border-color: rgba(255,255,255,0.45); color: #fff; }
+
+      #bottom-bar {
+        padding: 16px 28px;
+        display: flex; align-items: center;
+      }
+
+      #sound-btn {
+        pointer-events: all; cursor: pointer;
+        background: none; border: none;
+        display: flex; align-items: center; gap: 7px;
+        font-family: 'Inter', sans-serif; font-size: 10px;
+        letter-spacing: 2px; color: rgba(200,160,80,0.55);
+        padding: 0;
+      }
+      #sound-btn:hover { color: rgba(200,160,80,0.85); }
+
+      #way-text {
+        position: fixed; inset: 0; z-index: 50;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Cinzel', serif; font-weight: 900;
+        font-size: clamp(22px, 4vw, 40px); letter-spacing: 8px;
+        color: #fff; pointer-events: none;
+        opacity: 0; transition: opacity 0.6s ease;
+        text-shadow: 0 0 60px rgba(150,200,255,1), 0 0 120px rgba(100,150,255,0.6);
+      }
+      #way-text.show { opacity: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="loader">
+      <div class="loader-ring"></div>
+      <div class="loader-text">ACQUIRING SIGNAL…</div>
+    </div>
+
+    <div id="ui">
+      <div id="main-content">
+        <div class="tag-404">404</div>
+        <h1>SIGNAL LOST<br />IN THE<br />OUTER RIM</h1>
+        <div class="cta-group">
+          <a href="/" class="btn btn-primary">⬡ RETURN TO BASE</a>
+        </div>
       </div>
-    </article>
-  </div>
-</BaseLayout>
+
+      <div id="bottom-bar">
+        <button id="sound-btn">
+          <span class="sound-icon">🔇</span>
+          <span class="sound-label">SOUND: OFF</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="way-text">THIS IS THE WAY.</div>
+
+    <script>
+      import '../scripts/404.js'
+    </script>
+  </body>
+</html>

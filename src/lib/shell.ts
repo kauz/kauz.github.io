@@ -31,7 +31,6 @@ const COMMAND_NAMES = [
 export class Shell {
   private readonly postData: Post[];
   private readonly output: IOutput;
-  private readonly visitorSlug: string;
   private readonly onCwdChange: () => void;
   private readonly base: string;
   private readonly fs: Record<string, string[]>;
@@ -40,6 +39,7 @@ export class Shell {
   private cwd = '~';
   private prevCwd = '~';
   private promptSymbol = '$';
+  private visitorSlug: string;
 
   constructor(ctx: Ctx) {
     this.postData = ctx.postData;
@@ -117,6 +117,7 @@ export class Shell {
         break;
       case 'ivanna':
         this.promptSymbol = '💜';
+        this.visitorSlug = 'ivanna';
         this.onCwdChange();
         break;
       default:

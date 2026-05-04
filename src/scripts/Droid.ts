@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 export class Droid {
   group: THREE.Group;
+  private _eyeLight: THREE.PointLight;
 
   constructor() {
     const g = new THREE.Group();
@@ -33,10 +34,15 @@ export class Droid {
       10
     );
     add(new THREE.SphereGeometry(0.5, 8, 8), GLOW, -1, 12.5);
+
+    this._eyeLight = new THREE.PointLight(0x44ccff, 0, 120, 1.8);
+    this._eyeLight.position.set(2.5, 6.5, 2.8);
+    g.add(this._eyeLight);
+
     this.group = g;
   }
 
-  update(helmPos: THREE.Vector3, mouse: THREE.Vector2, t: number): void {
+  update(helmPos: THREE.Vector3, mouse: THREE.Vector2, t: number, sunAlt: number): void {
     const g = this.group;
     g.position.x += (helmPos.x - 20 + mouse.x * 25 - g.position.x) * 0.025;
     g.position.z += (helmPos.z + 60 + mouse.y * 15 - g.position.z) * 0.025;
@@ -44,5 +50,7 @@ export class Droid {
     g.rotation.y = Math.sin(t * 1) * 0.3 - 30;
     g.rotation.z = Math.sin(t * 0.6) * 0.12 - 0.08;
     g.rotation.x = Math.sin(t * 0.2) * 0.12 - 0.08;
+    const nightT = Math.max(0, Math.min(1, 1 - (sunAlt + 0.1) / 0.2));
+    this._eyeLight.intensity = nightT * 200;
   }
 }

@@ -6,6 +6,8 @@ export class DustSystem {
   private _pos: Float32Array;
   private _vel: Float32Array;
   private _attr: THREE.BufferAttribute;
+  private _dayColor = new THREE.Color(0xbb7722);
+  private _nightColor = new THREE.Color(0x22ff66);
   points: THREE.Points;
 
   constructor(count = 1000, spread = 700) {
@@ -58,7 +60,7 @@ export class DustSystem {
     }
   }
 
-  update(origin: THREE.Vector3): void {
+  update(origin: THREE.Vector3, sunAlt: number): void {
     const { _count: n, _spread: s, _pos: pos, _vel: vel } = this;
     const half = s / 2;
     for (let i = 0; i < n; i++) {
@@ -72,6 +74,10 @@ export class DustSystem {
       if (pos[i * 3 + 1] > origin.y + 100) pos[i * 3 + 1] = origin.y;
       if (pos[i * 3 + 1] < origin.y - 5) pos[i * 3 + 1] += s * 0.003;
     }
+    const mat = this.points.material as THREE.PointsMaterial;
+    const nightT = Math.max(0, Math.min(1, 1 - (sunAlt + 0.1) / 0.2));
+    mat.color.lerpColors(this._dayColor, this._nightColor, nightT);
+    mat.opacity = 0.25 + nightT * 0.25;
     this._attr.needsUpdate = true;
   }
 }

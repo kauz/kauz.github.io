@@ -57,6 +57,12 @@ new ModelLoader().load('/404/mando_405.gltf').then((gltf) => {
   ts.fillLight.target.position.copy(helmPos);
   ts.fillLight.target.updateMatrixWorld();
 
+  const camLight = new THREE.DirectionalLight(0xd0e8ff, 1.5);
+  camLight.position.set(helmPos.x - 5, helmPos.y + 15, helmPos.z - 40);
+  camLight.target.position.copy(helmPos);
+  ts.scene.add(camLight, camLight.target);
+  camLight.target.updateMatrixWorld();
+
   skyDome.mesh.position.copy(helmPos);
 
   sunSystem = new BinarySunSystem(ts.keyLight, ts.fillLight);
@@ -79,8 +85,8 @@ function animate() {
     (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
     helmetNod.update();
     helmetHearts.update();
-    droid.update(helmPos, ts.cam.mouse, t);
-    dust.update(helmPos);
+    droid.update(helmPos, ts.cam.mouse, t, sunAlt);
+    dust.update(helmPos, sunAlt);
   }
   ts.render();
 }

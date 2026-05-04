@@ -194,6 +194,10 @@ a:hover {
   flex-shrink: 0;
 }
 
+#cmd-typed {
+  white-space: pre;
+}
+
 /* Blinking block cursor */
 .cursor {
   display: inline-block;

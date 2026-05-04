@@ -197,7 +197,6 @@ export class App {
     if (this.booting) return;
 
     if (e.key === this.konamiSeq[this.konamiProgress]) {
-      console.log(e.key);
       this.konamiProgress++;
       if (this.konamiProgress === this.konamiSeq.length) {
         this.konamiProgress = 0;

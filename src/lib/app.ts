@@ -66,6 +66,7 @@ export class App {
     document.addEventListener('click', () => this.input.focus());
 
     this.blinkCursor.classList.add('is-hidden');
+    this.startZeroG();
   }
 
   async boot(): Promise<void> {
@@ -136,22 +137,39 @@ export class App {
     const rand = (scale: number) => (Math.random() - 0.5) * scale;
     const margin = 20;
 
-    const states = ([...Array.from(output.children), inputRow] as HTMLElement[]).map((el) => ({
-      el: el as HTMLElement,
+    // 1. Helper to turn an element into an animatable state object
+    const createState = (el: HTMLElement) => ({
+      el,
       x: 0,
       y: 0,
       rot: 0,
       vx: rand(0.5),
       vy: rand(0.5),
       vr: rand(0.07),
-    }));
+    });
+
+    // 2. Initialize with existing elements
+    const states = ([...Array.from(output.children), inputRow] as HTMLElement[]).map(createState);
+
+    // 3. Subscribe to new elements added to #output
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            states.push(createState(node));
+          }
+        });
+      }
+    });
+
+    observer.observe(output, { childList: true });
 
     const tick = () => {
-      // Read all visual rects before any writes to avoid per-element layout thrash.
-      // getBoundingClientRect accounts for rotation, so bounds work for any angle.
       const bRect = body.getBoundingClientRect();
       const W = body.clientWidth;
       const H = body.clientHeight;
+
+      // Batch reads to avoid layout thrashing
       const rects = states.map((s) => s.el.getBoundingClientRect());
 
       for (let i = 0; i < states.length; i++) {
@@ -162,12 +180,12 @@ export class App {
         s.y += s.vy;
         s.rot += s.vr;
 
-        // Visual edges relative to the body container (previous frame, ~0.3 px behind — imperceptible).
         const vLeft = r.left - bRect.left;
         const vRight = r.right - bRect.left;
         const vTop = r.top - bRect.top;
         const vBottom = r.bottom - bRect.top;
 
+        // Bounce Logic
         if (vRight < margin) {
           s.x += margin - vRight;
           s.vx = Math.abs(s.vx);
@@ -191,6 +209,9 @@ export class App {
     };
 
     this.zeroGRaf = requestAnimationFrame(tick);
+
+    // Optional: Store observer to disconnect it when zero-g is stopped
+    // this.zeroGObserver = observer;
   }
 
   private handleKeydown(e: KeyboardEvent): void {

@@ -10,6 +10,19 @@ export class App {
   private histIdx = -1;
   private cursorTimer!: ReturnType<typeof setTimeout>;
   private booting = true;
+  private readonly konamiSeq = [
+    'ArrowUp',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowLeft',
+    'ArrowRight',
+    'b',
+    'a',
+  ];
+  private konamiProgress = 0;
 
   private input: HTMLInputElement;
   private cmdTyped: HTMLElement;
@@ -104,8 +117,37 @@ export class App {
     }
   }
 
+  private triggerKonami(): void {
+    this.terminal.gap();
+    this.terminal.typewrite([
+      ['↑ ↑ ↓ ↓ ← → ← → B A', 'out-dim'],
+      [null],
+      ['  ✦ CHEAT CODE ACTIVATED ✦'],
+      [null],
+      ['  + 30 lives granted'],
+      ['  + god mode: ENABLED'],
+      ['  + caffeine: MAXIMUM'],
+      [null],
+      [`  good luck out there, ${this.visitor.name}.`, 'out-dim'],
+    ]);
+  }
+
   private handleKeydown(e: KeyboardEvent): void {
     if (this.booting) return;
+
+    if (e.key === this.konamiSeq[this.konamiProgress]) {
+      console.log(e.key);
+      this.konamiProgress++;
+      if (this.konamiProgress === this.konamiSeq.length) {
+        this.konamiProgress = 0;
+        this.input.value = '';
+        this.syncDisplay();
+        this.triggerKonami();
+        return;
+      }
+    } else {
+      this.konamiProgress = e.key === this.konamiSeq[0] ? 1 : 0;
+    }
 
     if (e.key === 'Enter') {
       const raw = this.input.value;

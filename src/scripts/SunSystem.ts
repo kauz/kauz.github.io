@@ -1,76 +1,26 @@
 import * as THREE from 'three';
+import SunCalc from 'suncalc';
 
-const LAT_RAD = (33.5 * Math.PI) / 180;
-const LNG_DEG = 10.7;
+const LAT = 50.45;
+const LNG = 30.52;
 const SKY_R = 900;
-const DEG = Math.PI / 180;
-const SPEED = 144; // 1 real second = 144 virtual seconds → 24 h per 10 min
-const CALC_INTERVAL = 200; // ms between solar recalculations (~0.03° sun movement)
+const SPEED = 5000;
+const CALC_INTERVAL = 200; // ms between solar recalculations
+// Orbit center pushed south so the sun arc sits near the camera horizon,
+// and shifted east so the camera's actual center line lands at noon.
+// Camera looks from helmPos+(-5,15,-40) toward helmPos+(10,15,0), so its
+// center line at Z+1800 passes through helmPos.x + 685.
+const ORBIT_Z = 1800;
+const ORBIT_X = 685;
 
-function solarAltAz(date: Date): { altitude: number; azimuth: number } {
-  const JD = date.getTime() / 86400000 + 2440587.5;
-  const T = (JD - 2451545.0) / 36525;
-
-  const L0 = (280.46646 + 36000.76983 * T) % 360;
-  const M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
-  const Mrad = M * DEG;
-
-  const C =
-    (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(Mrad) +
-    (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad) +
-    0.000289 * Math.sin(3 * Mrad);
-
-  const omega = 125.04 - 1934.136 * T;
-  const lambda = L0 + C - 0.00569 - 0.00478 * Math.sin(omega * DEG);
-
-  const epsilon = 23.439291111 - 0.013004167 * T + 0.00256 * Math.cos(omega * DEG);
-  const epsilonRad = epsilon * DEG;
-  const lambdaRad = lambda * DEG;
-
-  const declination = Math.asin(Math.sin(epsilonRad) * Math.sin(lambdaRad));
-
-  const y = Math.tan(epsilonRad / 2) ** 2;
-  const L0r = L0 * DEG;
-  const e = 0.016708634;
-  const eot =
-    (180 / Math.PI) *
-    4 *
-    (y * Math.sin(2 * L0r) -
-      2 * e * Math.sin(Mrad) +
-      4 * e * y * Math.sin(Mrad) * Math.cos(2 * L0r) -
-      0.5 * y * y * Math.sin(4 * L0r) -
-      1.25 * e * e * Math.sin(2 * Mrad));
-
-  const solarNoonMin = 720 - 4 * LNG_DEG - eot;
-  const utcMin =
-    date.getUTCHours() * 60 +
-    date.getUTCMinutes() +
-    date.getUTCSeconds() / 60 +
-    date.getUTCMilliseconds() / 60000;
-  const hourAngleRad = ((utcMin - solarNoonMin) / 4) * DEG;
-
-  const sinAlt =
-    Math.sin(LAT_RAD) * Math.sin(declination) +
-    Math.cos(LAT_RAD) * Math.cos(declination) * Math.cos(hourAngleRad);
-  const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
-
-  const rawAz = Math.atan2(
-    -Math.sin(hourAngleRad) * Math.cos(declination),
-    Math.cos(hourAngleRad) * Math.cos(declination) * Math.sin(LAT_RAD) -
-      Math.sin(declination) * Math.cos(LAT_RAD)
-  );
-  const azimuth = ((rawAz % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-
-  return { altitude, azimuth };
-}
-
-// North = −Z, East = +X, Up = +Y
-function altAzToVec3(altitude: number, azimuth: number, center: THREE.Vector3): THREE.Vector3 {
-  const cosAlt = Math.cos(altitude);
+// SunCalc azimuth: 0=south, +π/2=west, -π/2=east
+// Scene coords:    North=-Z, East=+X, Up=+Y  →  South=+Z
+function sunToVec3(alt: number, scAz: number, center: THREE.Vector3): THREE.Vector3 {
+  const cosAlt = Math.cos(alt);
   return new THREE.Vector3(
-    center.x + Math.sin(azimuth) * cosAlt * SKY_R,
-    center.y + Math.sin(altitude) * SKY_R,
-    center.z - Math.cos(azimuth) * cosAlt * SKY_R
+    center.x - Math.sin(scAz) * cosAlt * SKY_R,
+    center.y + Math.sin(alt) * SKY_R,
+    center.z + Math.cos(scAz) * cosAlt * SKY_R
   );
 }
 
@@ -118,8 +68,8 @@ function makeSun(radius: number, color: number, texture: THREE.Texture): THREE.G
 export class BinarySunSystem {
   sun1: THREE.Group;
   sun2: THREE.Group;
-  private keyLight: THREE.DirectionalLight;
-  private fillLight: THREE.DirectionalLight;
+  private _keyLight: THREE.DirectionalLight;
+  private _fillLight: THREE.DirectionalLight;
   private _keyBase: number;
   private _fillBase: number;
   private _t0real: number;
@@ -130,12 +80,12 @@ export class BinarySunSystem {
     const tex = makeGlowTexture();
     this.sun1 = makeSun(20, 0xff8822, tex);
     this.sun2 = makeSun(12, 0x83d0fc, tex);
-    this.keyLight = keyLight;
-    this.fillLight = fillLight;
+    this._keyLight = keyLight;
+    this._fillLight = fillLight;
     this._keyBase = 5.0;
     this._fillBase = 1.8;
     this._t0real = Date.now();
-    this._t0virt = new Date();
+    this._t0virt = new Date(); // start from user's real current time
     this._lastCalc = -Infinity;
   }
 
@@ -146,29 +96,24 @@ export class BinarySunSystem {
 
     const elapsed = (now - this._t0real) * SPEED;
     const vDate1 = new Date(this._t0virt.getTime() + elapsed);
-    const vDate2 = new Date(vDate1.getTime() - 45 * 60 * 1000); // 45 min lag
+    const vDate2 = new Date(vDate1.getTime() - 45 * 60 * 1000); // sun2 lags 45 min
 
-    const p1 = solarAltAz(vDate1);
-    const p2 = solarAltAz(vDate2);
-    p2.azimuth += 15 * DEG;
+    const p1 = SunCalc.getPosition(vDate1, LAT, LNG);
+    const p2 = SunCalc.getPosition(vDate2, LAT, LNG);
+    const az2 = p2.azimuth + (15 * Math.PI) / 180;
 
-    const pos1 = altAzToVec3(p1.altitude, p1.azimuth, center);
-    const pos2 = altAzToVec3(p2.altitude, p2.azimuth, center);
-
-    this.sun1.position.copy(pos1);
-    this.sun2.position.copy(pos2);
-
-    const i1 = Math.max(0, Math.sin(p1.altitude));
-    const i2 = Math.max(0, Math.sin(p2.altitude));
+    const oc = new THREE.Vector3(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
+    this.sun1.position.copy(sunToVec3(p1.altitude, p1.azimuth, oc));
+    this.sun2.position.copy(sunToVec3(p2.altitude, az2, oc));
 
     const t1 = Math.min(1, Math.max(0, p1.altitude / (Math.PI / 4)));
-    this.keyLight.position.copy(pos1);
-    this.keyLight.intensity = i1 * this._keyBase;
-    this.keyLight.color.setHex(lerpHex(0xff4400, 0xffcc88, t1));
+    this._keyLight.position.copy(this.sun1.position);
+    this._keyLight.intensity = Math.max(0, Math.sin(p1.altitude)) * this._keyBase;
+    this._keyLight.color.setHex(lerpHex(0xff4400, 0xffcc88, t1));
 
     const t2 = Math.min(1, Math.max(0, p2.altitude / (Math.PI / 4)));
-    this.fillLight.position.copy(pos2);
-    this.fillLight.intensity = i2 * this._fillBase;
-    this.fillLight.color.setHex(lerpHex(0x4466ff, 0xaaddff, t2));
+    this._fillLight.position.copy(this.sun2.position);
+    this._fillLight.intensity = Math.max(0, Math.sin(p2.altitude)) * this._fillBase;
+    this._fillLight.color.setHex(lerpHex(0x4466ff, 0xaaddff, t2));
   }
 }

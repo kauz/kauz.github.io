@@ -339,7 +339,7 @@ export class Shell {
       '─────────────────────',
       `${g('OS')}: ${os}`,
       `${g('Host')}: GitHub Pages`,
-      `${g('Kernel')}: Artem Popov v1.0`,
+      `${g('Kernel')}: [DELETED]`,
       `${g('Packages')}: [DELETED]`,
       `${g('Shell')}: [DELETED]`,
       `${g('Resolution')}: ${screen.width}x${screen.height}`,

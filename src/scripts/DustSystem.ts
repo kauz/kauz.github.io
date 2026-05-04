@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 
 export class DustSystem {
+  private _count: number;
+  private _spread: number;
+  private _pos: Float32Array;
+  private _vel: Float32Array;
+  private _attr: THREE.BufferAttribute;
+  points: THREE.Points;
+
   constructor(count = 1000, spread = 700) {
     this._count = count;
     this._spread = spread;
@@ -24,11 +31,12 @@ export class DustSystem {
       })
     );
   }
-  static _sprite() {
+
+  private static _sprite(): THREE.CanvasTexture {
     const c = document.createElement('canvas');
     c.width = 32;
     c.height = 32;
-    const ctx = c.getContext('2d');
+    const ctx = c.getContext('2d')!;
     const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
     g.addColorStop(0, 'rgba(255,255,255,1)');
     g.addColorStop(0.4, 'rgba(255,255,255,0.4)');
@@ -37,7 +45,8 @@ export class DustSystem {
     ctx.fillRect(0, 0, 32, 32);
     return new THREE.CanvasTexture(c);
   }
-  init(origin) {
+
+  init(origin: THREE.Vector3): void {
     const { _count: n, _spread: s, _pos: pos, _vel: vel } = this;
     for (let i = 0; i < n; i++) {
       pos[i * 3] = origin.x + (Math.random() - 0.5) * s;
@@ -48,7 +57,8 @@ export class DustSystem {
       vel[i * 3 + 2] = (Math.random() - 0.5) * 0.09;
     }
   }
-  update(origin) {
+
+  update(origin: THREE.Vector3): void {
     const { _count: n, _spread: s, _pos: pos, _vel: vel } = this;
     const half = s / 2;
     for (let i = 0; i < n; i++) {

@@ -1,22 +1,17 @@
 import * as THREE from 'three';
 
-function makeHeartTexture(size = 256) {
+function makeHeartTexture(size = 256): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = size;
   c.height = size;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d')!;
   const h = size / 2;
 
-  ctx.shadowColor = '0xff3377';
-  ctx.shadowBlur = size * 0.15;
-  ctx.fillStyle = '0xff3377';
-
-  const drawShape = (scale) => {
+  const drawShape = (scale: number) => {
     ctx.save();
     ctx.translate(h, h);
     ctx.scale(scale, scale);
     ctx.translate(-h, -h);
-
     ctx.beginPath();
     ctx.arc(h * 0.5, h * 0.72, h * 0.48, 0, Math.PI * 2);
     ctx.fill();
@@ -44,7 +39,7 @@ function makeHeartTexture(size = 256) {
   return new THREE.CanvasTexture(c);
 }
 
-const EYE_POSITIONS = [
+const EYE_POSITIONS: [number, number, number][] = [
   [-1.5, 9.5, -3.8],
   [0.89, 9.5, -3.8],
 ];
@@ -53,24 +48,21 @@ const SPRITE_ROTATION = -0.2;
 const LERP_SPEED = 0.05;
 
 export class HelmetHearts {
-  constructor() {
-    this._sprites = [];
-    this._opacity = 0;
-    this._target = 0;
-    this._timeout = null;
-  }
+  private _sprites: THREE.Sprite[] = [];
+  private _opacity = 0;
+  private _target = 0;
+  private _timeout: number | null = null;
 
-  attach(helmMesh) {
+  attach(helmMesh: THREE.Object3D): void {
     const tex = makeHeartTexture();
     for (const [x, y, z] of EYE_POSITIONS) {
       const mat = new THREE.SpriteMaterial({
         map: tex,
-        // color: 0xff3377, // Vibrant neon pink
         transparent: true,
         opacity: 0,
         rotation: SPRITE_ROTATION,
-        blending: THREE.AdditiveBlending, // Light adds to background (Glow effect)
-        depthWrite: false, // Ensures transparency doesn't clip the visor
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
         depthTest: true,
       });
       const sprite = new THREE.Sprite(mat);
@@ -81,7 +73,7 @@ export class HelmetHearts {
     }
   }
 
-  listenFor(phrase, onActivate) {
+  listenFor(phrase: string, onActivate?: () => void): void {
     let typed = '';
     window.addEventListener('keydown', (e) => {
       if (e.key.length !== 1) return;
@@ -94,26 +86,18 @@ export class HelmetHearts {
     });
   }
 
-  show(durationMs = 4000) {
+  show(durationMs = 4000): void {
     this._target = 1;
     if (this._timeout) clearTimeout(this._timeout);
     this._timeout = setTimeout(() => {
       this._target = 0;
-    }, durationMs);
+    }, durationMs) as unknown as number;
   }
 
-  update() {
-    // Smooth transition for activation
+  update(): void {
     this._opacity += (this._target - this._opacity) * LERP_SPEED;
-
-    // Electronic Flicker logic:
-    // Adds a tiny, high-speed random variance to the opacity to mimic a digital display
     const flicker = this._target > 0 ? 0.92 + Math.random() * 0.08 : 1;
-
-    // Pulse logic:
-    // A slow "breathing" effect using time
     const pulse = 1 + Math.sin(Date.now() * 0.01) * 0.04 * this._opacity;
-
     for (const s of this._sprites) {
       s.material.opacity = this._opacity * flicker;
       s.scale.setScalar(SPRITE_SCALE * pulse);

@@ -1,23 +1,32 @@
+import type * as THREE from 'three';
+
 export class HelmetNod {
+  private rotAmount: number;
+  private liftAmount: number;
+  private speed: number;
+  private holdMs: number;
+  private _mesh: THREE.Object3D | null = null;
+  private _baseRotX = 0;
+  private _basePosY = 0;
+  private _rotOffset = 0;
+  private _rotTarget = 0;
+  private _liftOffset = 0;
+  private _liftTarget = 0;
+
   constructor(rotAmount = -0.35, liftAmount = 2, speed = 0.02, holdMs = 900) {
     this.rotAmount = rotAmount;
     this.liftAmount = liftAmount;
     this.speed = speed;
     this.holdMs = holdMs;
-    this._mesh = null;
-    this._baseRotX = 0;
-    this._basePosY = 0;
-    this._rotOffset = 0;
-    this._rotTarget = 0;
-    this._liftOffset = 0;
-    this._liftTarget = 0;
   }
-  attach(mesh) {
+
+  attach(mesh: THREE.Object3D): void {
     this._mesh = mesh;
     this._baseRotX = mesh.rotation.x;
     this._basePosY = mesh.position.y;
   }
-  trigger() {
+
+  trigger(): void {
     if (!this._mesh) return;
     this._rotTarget = this.rotAmount;
     this._liftTarget = this.liftAmount;
@@ -26,7 +35,8 @@ export class HelmetNod {
       this._liftTarget = 0;
     }, this.holdMs);
   }
-  listenFor(phrase, onActivate) {
+
+  listenFor(phrase: string, onActivate?: () => void): void {
     let typed = '';
     window.addEventListener('keydown', (e) => {
       if (e.key.length !== 1) return;
@@ -38,7 +48,8 @@ export class HelmetNod {
       onActivate?.();
     });
   }
-  update() {
+
+  update(): void {
     if (!this._mesh) return;
     this._rotOffset += (this._rotTarget - this._rotOffset) * this.speed;
     this._liftOffset += (this._liftTarget - this._liftOffset) * this.speed;

@@ -16,9 +16,9 @@ const clock = new THREE.Clock();
 ts.scene.add(droid.group, dust.points);
 
 const helmPos = new THREE.Vector3();
-let sunSystem = null;
+let sunSystem: BinarySunSystem | null = null;
 
-const wayText = document.getElementById('way-text');
+const wayText = document.getElementById('way-text')!;
 helmetNod.listenFor('thisistheway', () => {
   wayText.classList.add('show');
   setTimeout(() => wayText.classList.remove('show'), 4000);
@@ -26,12 +26,14 @@ helmetNod.listenFor('thisistheway', () => {
 helmetHearts.listenFor('ivanna');
 
 const soundBtn = document.getElementById('sound-btn');
-let soundOn = false;
-soundBtn?.addEventListener('click', () => {
-  soundOn = !soundOn;
-  soundBtn.querySelector('.sound-icon').textContent = soundOn ? '🔊' : '🔇';
-  soundBtn.querySelector('.sound-label').textContent = `SOUND: ${soundOn ? 'ON' : 'OFF'}`;
-});
+if (soundBtn) {
+  let soundOn = false;
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundBtn.querySelector('.sound-icon')!.textContent = soundOn ? '🔊' : '🔇';
+    soundBtn.querySelector('.sound-label')!.textContent = `SOUND: ${soundOn ? 'ON' : 'OFF'}`;
+  });
+}
 
 new ModelLoader().load('/404/mando_405.gltf').then((gltf) => {
   const helmet = findHelmet(gltf);

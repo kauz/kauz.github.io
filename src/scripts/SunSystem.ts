@@ -7,7 +7,7 @@ const DEG = Math.PI / 180;
 const SPEED = 144; // 1 real second = 144 virtual seconds → 24 h per 10 min
 const CALC_INTERVAL = 200; // ms between solar recalculations (~0.03° sun movement)
 
-function solarAltAz(date) {
+function solarAltAz(date: Date): { altitude: number; azimuth: number } {
   const JD = date.getTime() / 86400000 + 2440587.5;
   const T = (JD - 2451545.0) / 36525;
 
@@ -29,7 +29,6 @@ function solarAltAz(date) {
 
   const declination = Math.asin(Math.sin(epsilonRad) * Math.sin(lambdaRad));
 
-  // Equation of time (minutes)
   const y = Math.tan(epsilonRad / 2) ** 2;
   const L0r = L0 * DEG;
   const e = 0.016708634;
@@ -55,7 +54,6 @@ function solarAltAz(date) {
     Math.cos(LAT_RAD) * Math.cos(declination) * Math.cos(hourAngleRad);
   const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
 
-  // Azimuth: 0 = North, π/2 = East, π = South, 3π/2 = West
   const rawAz = Math.atan2(
     -Math.sin(hourAngleRad) * Math.cos(declination),
     Math.cos(hourAngleRad) * Math.cos(declination) * Math.sin(LAT_RAD) -
@@ -67,7 +65,7 @@ function solarAltAz(date) {
 }
 
 // North = −Z, East = +X, Up = +Y
-function altAzToVec3(altitude, azimuth, center) {
+function altAzToVec3(altitude: number, azimuth: number, center: THREE.Vector3): THREE.Vector3 {
   const cosAlt = Math.cos(altitude);
   return new THREE.Vector3(
     center.x + Math.sin(azimuth) * cosAlt * SKY_R,
@@ -76,18 +74,18 @@ function altAzToVec3(altitude, azimuth, center) {
   );
 }
 
-function lerpHex(a, b, t) {
+function lerpHex(a: number, b: number, t: number): number {
   const r = Math.round(((a >> 16) & 0xff) + (((b >> 16) & 0xff) - ((a >> 16) & 0xff)) * t);
   const g = Math.round(((a >> 8) & 0xff) + (((b >> 8) & 0xff) - ((a >> 8) & 0xff)) * t);
   const bl = Math.round((a & 0xff) + ((b & 0xff) - (a & 0xff)) * t);
   return (r << 16) | (g << 8) | bl;
 }
 
-function makeGlowTexture() {
+function makeGlowTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = 64;
   c.height = 64;
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d')!;
   const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   g.addColorStop(0, 'rgba(255,255,255,1)');
   g.addColorStop(0.2, 'rgba(255,255,255,0.5)');
@@ -97,7 +95,7 @@ function makeGlowTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-function makeSun(radius, color, texture) {
+function makeSun(radius: number, color: number, texture: THREE.Texture): THREE.Group {
   const group = new THREE.Group();
   group.add(
     new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 32), new THREE.MeshBasicMaterial({ color }))
@@ -118,7 +116,17 @@ function makeSun(radius, color, texture) {
 }
 
 export class BinarySunSystem {
-  constructor(keyLight, fillLight) {
+  sun1: THREE.Group;
+  sun2: THREE.Group;
+  private keyLight: THREE.DirectionalLight;
+  private fillLight: THREE.DirectionalLight;
+  private _keyBase: number;
+  private _fillBase: number;
+  private _t0real: number;
+  private _t0virt: Date;
+  private _lastCalc: number;
+
+  constructor(keyLight: THREE.DirectionalLight, fillLight: THREE.DirectionalLight) {
     const tex = makeGlowTexture();
     this.sun1 = makeSun(20, 0xff8822, tex);
     this.sun2 = makeSun(12, 0x83d0fc, tex);
@@ -131,7 +139,7 @@ export class BinarySunSystem {
     this._lastCalc = -Infinity;
   }
 
-  update(center) {
+  update(center: THREE.Vector3): void {
     const now = Date.now();
     if (now - this._lastCalc < CALC_INTERVAL) return;
     this._lastCalc = now;
@@ -142,7 +150,7 @@ export class BinarySunSystem {
 
     const p1 = solarAltAz(vDate1);
     const p2 = solarAltAz(vDate2);
-    p2.azimuth += 15 * DEG; // angular offset for second sun
+    p2.azimuth += 15 * DEG;
 
     const pos1 = altAzToVec3(p1.altitude, p1.azimuth, center);
     const pos2 = altAzToVec3(p2.altitude, p2.azimuth, center);

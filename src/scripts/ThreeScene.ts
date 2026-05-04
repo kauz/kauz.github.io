@@ -6,6 +6,14 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { CameraController } from './CameraController.js';
 
 export class ThreeScene {
+  scene: THREE.Scene;
+  cam: CameraController;
+  keyLight: THREE.DirectionalLight;
+  fillLight: THREE.DirectionalLight;
+  private _renderer: THREE.WebGLRenderer;
+  private _composer: EffectComposer;
+  private _bloomPass: UnrealBloomPass;
+
   constructor() {
     this._renderer = this._makeRenderer();
     this.scene = this._makeScene();
@@ -19,11 +27,11 @@ export class ThreeScene {
     window.addEventListener('resize', () => this._onResize());
   }
 
-  render() {
+  render(): void {
     this._composer.render();
   }
 
-  _makeRenderer() {
+  private _makeRenderer(): THREE.WebGLRenderer {
     const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     r.setClearColor(0x000000, 0);
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -38,13 +46,13 @@ export class ThreeScene {
     return r;
   }
 
-  _makeScene() {
+  private _makeScene(): THREE.Scene {
     const s = new THREE.Scene();
     s.fog = new THREE.FogExp2(0x1e0800, 0.00058);
     return s;
   }
 
-  _makeComposer() {
+  private _makeComposer(): { composer: EffectComposer; bloomPass: UnrealBloomPass } {
     const composer = new EffectComposer(this._renderer);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -58,7 +66,7 @@ export class ThreeScene {
     return { composer, bloomPass };
   }
 
-  _makeLights() {
+  private _makeLights(): { keyLight: THREE.DirectionalLight; fillLight: THREE.DirectionalLight } {
     this.scene.add(new THREE.AmbientLight(0x201030, 1.2));
 
     const keyLight = new THREE.DirectionalLight(0xff8830, 5.0);
@@ -83,7 +91,7 @@ export class ThreeScene {
     return { keyLight, fillLight };
   }
 
-  _onResize() {
+  private _onResize(): void {
     this.cam.onResize();
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._composer.setSize(window.innerWidth, window.innerHeight);

@@ -39,6 +39,7 @@ export class Shell {
   private readonly completions: Record<string, () => string[]>;
   private cwd = '~';
   private prevCwd = '~';
+  private promptSymbol = '$';
 
   constructor(ctx: Ctx) {
     this.postData = ctx.postData;
@@ -61,7 +62,7 @@ export class Shell {
   }
 
   getPrompt(): string {
-    return `${this.visitorSlug}@holonet:${this.cwd}$`;
+    return `${this.visitorSlug}@holonet:${this.cwd}${this.promptSymbol}`;
   }
 
   dispatch(name: string, args: string[]): boolean {
@@ -113,6 +114,10 @@ export class Shell {
         break;
       case 'neofetch':
         this.neofetch();
+        break;
+      case 'ivanna':
+        this.promptSymbol = '💜';
+        this.onCwdChange();
         break;
       default:
         return false;

@@ -333,6 +333,11 @@ a:hover {
   margin: 2rem 0;
 }
 
+/* ── Zero-G mode ────────────────────────────────────────── */
+.zero-g-active {
+  overflow: hidden;
+}
+
 /* ── Reduced motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .cursor {

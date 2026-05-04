@@ -117,19 +117,80 @@ export class App {
     }
   }
 
+  private zeroGRaf = 0;
+
   private triggerKonami(): void {
     this.terminal.gap();
-    this.terminal.typewrite([
-      ['↑ ↑ ↓ ↓ ← → ← → B A', 'out-dim'],
-      [null],
-      ['  ✦ CHEAT CODE ACTIVATED ✦'],
-      [null],
-      ['  + 30 lives granted'],
-      ['  + god mode: ENABLED'],
-      ['  + caffeine: MAXIMUM'],
-      [null],
-      [`  good luck out there, ${this.visitor.name}.`, 'out-dim'],
-    ]);
+    setTimeout(() => this.startZeroG(), 50);
+  }
+
+  private startZeroG(): void {
+    if (this.zeroGRaf) return;
+
+    const body = document.getElementById('t-body') as HTMLElement;
+    const output = document.getElementById('output') as HTMLElement;
+    const inputRow = document.querySelector('.input-row') as HTMLElement;
+
+    body.classList.add('zero-g-active');
+
+    const rand = (scale: number) => (Math.random() - 0.5) * scale;
+    const margin = 20;
+
+    const states = ([...Array.from(output.children), inputRow] as HTMLElement[]).map((el) => ({
+      el: el as HTMLElement,
+      x: 0,
+      y: 0,
+      rot: 0,
+      vx: rand(0.5),
+      vy: rand(0.5),
+      vr: rand(0.07),
+    }));
+
+    const tick = () => {
+      // Read all visual rects before any writes to avoid per-element layout thrash.
+      // getBoundingClientRect accounts for rotation, so bounds work for any angle.
+      const bRect = body.getBoundingClientRect();
+      const W = body.clientWidth;
+      const H = body.clientHeight;
+      const rects = states.map((s) => s.el.getBoundingClientRect());
+
+      for (let i = 0; i < states.length; i++) {
+        const s = states[i];
+        const r = rects[i];
+
+        s.x += s.vx;
+        s.y += s.vy;
+        s.rot += s.vr;
+
+        // Visual edges relative to the body container (previous frame, ~0.3 px behind — imperceptible).
+        const vLeft = r.left - bRect.left;
+        const vRight = r.right - bRect.left;
+        const vTop = r.top - bRect.top;
+        const vBottom = r.bottom - bRect.top;
+
+        if (vRight < margin) {
+          s.x += margin - vRight;
+          s.vx = Math.abs(s.vx);
+        } else if (vLeft > W - margin) {
+          s.x -= vLeft - (W - margin);
+          s.vx = -Math.abs(s.vx);
+        }
+
+        if (vBottom < margin) {
+          s.y += margin - vBottom;
+          s.vy = Math.abs(s.vy);
+        } else if (vTop > H - margin) {
+          s.y -= vTop - (H - margin);
+          s.vy = -Math.abs(s.vy);
+        }
+
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px) rotate(${s.rot}deg)`;
+      }
+
+      this.zeroGRaf = requestAnimationFrame(tick);
+    };
+
+    this.zeroGRaf = requestAnimationFrame(tick);
   }
 
   private handleKeydown(e: KeyboardEvent): void {

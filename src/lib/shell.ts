@@ -39,6 +39,7 @@ export class Shell {
   private readonly completions: Record<string, () => string[]>;
   private cwd = '~';
   private prevCwd = '~';
+  private promptSymbol = '$';
 
   constructor(ctx: Ctx) {
     this.postData = ctx.postData;
@@ -61,7 +62,7 @@ export class Shell {
   }
 
   getPrompt(): string {
-    return `${this.visitorSlug}@holonet:${this.cwd}$`;
+    return `${this.visitorSlug}@holonet:${this.cwd}${this.promptSymbol}`;
   }
 
   dispatch(name: string, args: string[]): boolean {
@@ -110,6 +111,13 @@ export class Shell {
         break;
       case 'rm':
         this.rm(args);
+        break;
+      case 'neofetch':
+        this.neofetch();
+        break;
+      case 'ivanna':
+        this.promptSymbol = '💜';
+        this.onCwdChange();
         break;
       default:
         return false;
@@ -300,6 +308,59 @@ export class Shell {
     } else {
       this.output.out('rm: missing operand', 'out-err');
     }
+  }
+
+  private neofetch(): void {
+    const theme = document.documentElement.dataset.theme ?? 'default';
+    const browser = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes('Firefox/')) return 'Firefox';
+      if (ua.includes('Edg/')) return 'Edge';
+      if (ua.includes('Chrome/')) return 'Chrome';
+      if (ua.includes('Safari/')) return 'Safari';
+      return 'Unknown';
+    })();
+    const os = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes('Win')) return 'Windows';
+      if (ua.includes('Mac')) return 'MacOS';
+      if (ua.includes('Linux')) return 'Linux';
+      if (ua.includes('Android')) return 'Android';
+      if (ua.includes('like Mac')) return 'iOS';
+      return 'Unknown';
+    })();
+
+    const upSec = Math.floor((Date.now() - performance.timeOrigin) / 1000);
+    const uptime = upSec < 60 ? `${upSec}s` : `${Math.floor(upSec / 60)}m ${upSec % 60}s`;
+    const g = (s: string) => `<span style="color:var(--green);font-weight:bold">${s}</span>`;
+
+    const info: string[] = [
+      g(`${this.visitorSlug}@holonet`),
+      '─────────────────────',
+      `${g('OS')}: ${os}`,
+      `${g('Host')}: GitHub Pages`,
+      `${g('Kernel')}: [DELETED]`,
+      `${g('Packages')}: [DELETED]`,
+      `${g('Shell')}: [DELETED]`,
+      `${g('Resolution')}: ${screen.width}x${screen.height}`,
+      `${g('Browser')}: ${browser}`,
+      `${g('Theme')}: ${theme}`,
+      `${g('Font')}: Courier New 0.95rem`,
+      `${g('Uptime')}: ${uptime}`,
+      '',
+      '<span style="background:var(--fg-dim)">   </span>' +
+        '<span style="background:var(--fg)">   </span>' +
+        '<span style="background:var(--green)">   </span>' +
+        '<span style="background:var(--red)">   </span>',
+    ];
+
+    const infoHtml = info.map((line) => `<div>${line}</div>`).join('');
+    this.output.outHTML(
+      `<div style="display:flex;gap:1.5rem;align-items:flex-start">` +
+        `<img src="${this.base}assets/ricing_girl.png" alt="" style="height: auto; width: 13.5rem" />` +
+        `<div style="line-height:1.5">${infoHtml}</div>` +
+        `</div>`
+    );
   }
 
   private theme(args: string[]): void {

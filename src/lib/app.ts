@@ -10,6 +10,19 @@ export class App {
   private histIdx = -1;
   private cursorTimer!: ReturnType<typeof setTimeout>;
   private booting = true;
+  private readonly konamiSeq = [
+    'ArrowUp',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowLeft',
+    'ArrowRight',
+    'b',
+    'a',
+  ];
+  private konamiProgress = 0;
 
   private input: HTMLInputElement;
   private cmdTyped: HTMLElement;
@@ -53,6 +66,7 @@ export class App {
     document.addEventListener('click', () => this.input.focus());
 
     this.blinkCursor.classList.add('is-hidden');
+    this.startZeroG();
   }
 
   async boot(): Promise<void> {
@@ -104,8 +118,117 @@ export class App {
     }
   }
 
+  private zeroGRaf = 0;
+
+  private triggerKonami(): void {
+    this.terminal.gap();
+    setTimeout(() => this.startZeroG(), 50);
+  }
+
+  private startZeroG(): void {
+    if (this.zeroGRaf) return;
+
+    const body = document.getElementById('t-body') as HTMLElement;
+    const output = document.getElementById('output') as HTMLElement;
+    const inputRow = document.querySelector('.input-row') as HTMLElement;
+
+    body.classList.add('zero-g-active');
+
+    const rand = (scale: number) => (Math.random() - 0.5) * scale;
+    const margin = 20;
+
+    // 1. Helper to turn an element into an animatable state object
+    const createState = (el: HTMLElement) => ({
+      el,
+      x: 0,
+      y: 0,
+      rot: 0,
+      vx: rand(0.5),
+      vy: rand(0.5),
+      vr: rand(0.07),
+    });
+
+    // 2. Initialize with existing elements
+    const states = ([...Array.from(output.children), inputRow] as HTMLElement[]).map(createState);
+
+    // 3. Subscribe to new elements added to #output
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            states.push(createState(node));
+          }
+        });
+      }
+    });
+
+    observer.observe(output, { childList: true });
+
+    const tick = () => {
+      const bRect = body.getBoundingClientRect();
+      const W = body.clientWidth;
+      const H = body.clientHeight;
+
+      // Batch reads to avoid layout thrashing
+      const rects = states.map((s) => s.el.getBoundingClientRect());
+
+      for (let i = 0; i < states.length; i++) {
+        const s = states[i];
+        const r = rects[i];
+
+        s.x += s.vx;
+        s.y += s.vy;
+        s.rot += s.vr;
+
+        const vLeft = r.left - bRect.left;
+        const vRight = r.right - bRect.left;
+        const vTop = r.top - bRect.top;
+        const vBottom = r.bottom - bRect.top;
+
+        // Bounce Logic
+        if (vRight < margin) {
+          s.x += margin - vRight;
+          s.vx = Math.abs(s.vx);
+        } else if (vLeft > W - margin) {
+          s.x -= vLeft - (W - margin);
+          s.vx = -Math.abs(s.vx);
+        }
+
+        if (vBottom < margin) {
+          s.y += margin - vBottom;
+          s.vy = Math.abs(s.vy);
+        } else if (vTop > H - margin) {
+          s.y -= vTop - (H - margin);
+          s.vy = -Math.abs(s.vy);
+        }
+
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px) rotate(${s.rot}deg)`;
+      }
+
+      this.zeroGRaf = requestAnimationFrame(tick);
+    };
+
+    this.zeroGRaf = requestAnimationFrame(tick);
+
+    // Optional: Store observer to disconnect it when zero-g is stopped
+    // this.zeroGObserver = observer;
+  }
+
   private handleKeydown(e: KeyboardEvent): void {
     if (this.booting) return;
+
+    if (e.key === this.konamiSeq[this.konamiProgress]) {
+      this.konamiProgress++;
+      if (this.konamiProgress === this.konamiSeq.length) {
+        this.konamiProgress = 0;
+        this.input.value = '';
+        this.syncDisplay();
+        this.triggerKonami();
+        return;
+      }
+    } else {
+      this.konamiProgress = e.key === this.konamiSeq[0] ? 1 : 0;
+    }
 
     if (e.key === 'Enter') {
       const raw = this.input.value;

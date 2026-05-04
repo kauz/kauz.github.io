@@ -4,7 +4,7 @@ import SunCalc from 'suncalc';
 const LAT = 50.45;
 const LNG = 30.52;
 const SKY_R = 900;
-const SPEED = 5000;
+const SPEED = 144;
 const CALC_INTERVAL = 200; // ms between solar recalculations
 // Orbit center pushed south so the sun arc sits near the camera horizon,
 // and shifted east so the camera's actual center line lands at noon.
@@ -47,20 +47,20 @@ function makeGlowTexture(): THREE.CanvasTexture {
 
 function makeSun(radius: number, color: number, texture: THREE.Texture): THREE.Group {
   const group = new THREE.Group();
-  group.add(
-    new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 32), new THREE.MeshBasicMaterial({ color }))
-  );
+  const mat = new THREE.MeshBasicMaterial({ color });
+  mat.color.multiplyScalar(4); // HDR — exceeds bloom threshold
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 32), mat));
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: texture,
       color,
       transparent: true,
-      opacity: 0.03,
+      opacity: 0.18,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
   );
-  sprite.scale.set(radius * 14, radius * 14, 1);
+  sprite.scale.set(radius * 18, radius * 18, 1);
   group.add(sprite);
   return group;
 }
@@ -75,6 +75,11 @@ export class BinarySunSystem {
   private _t0real: number;
   private _t0virt: Date;
   private _lastCalc: number;
+  private _lastAlt = -Math.PI / 2;
+  private _sun1Target = new THREE.Vector3();
+  private _sun2Target = new THREE.Vector3();
+  private _lastFrame = Date.now();
+  private _initialized = false;
 
   constructor(keyLight: THREE.DirectionalLight, fillLight: THREE.DirectionalLight) {
     const tex = makeGlowTexture();
@@ -89,31 +94,51 @@ export class BinarySunSystem {
     this._lastCalc = -Infinity;
   }
 
-  update(center: THREE.Vector3): void {
+  update(center: THREE.Vector3): number {
     const now = Date.now();
-    if (now - this._lastCalc < CALC_INTERVAL) return;
-    this._lastCalc = now;
+    const dt = Math.min((now - this._lastFrame) / 1000, 0.1);
+    this._lastFrame = now;
 
-    const elapsed = (now - this._t0real) * SPEED;
-    const vDate1 = new Date(this._t0virt.getTime() + elapsed);
-    const vDate2 = new Date(vDate1.getTime() - 45 * 60 * 1000); // sun2 lags 45 min
+    if (now - this._lastCalc >= CALC_INTERVAL) {
+      this._lastCalc = now;
 
-    const p1 = SunCalc.getPosition(vDate1, LAT, LNG);
-    const p2 = SunCalc.getPosition(vDate2, LAT, LNG);
-    const az2 = p2.azimuth + (15 * Math.PI) / 180;
+      const elapsed = (now - this._t0real) * SPEED;
+      const vDate1 = new Date(this._t0virt.getTime() + elapsed);
+      const vDate2 = new Date(vDate1.getTime() - 45 * 60 * 1000); // sun2 lags 45 min
 
-    const oc = new THREE.Vector3(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
-    this.sun1.position.copy(sunToVec3(p1.altitude, p1.azimuth, oc));
-    this.sun2.position.copy(sunToVec3(p2.altitude, az2, oc));
+      const p1 = SunCalc.getPosition(vDate1, LAT, LNG);
+      const p2 = SunCalc.getPosition(vDate2, LAT, LNG);
+      const az2 = p2.azimuth + (15 * Math.PI) / 180;
 
-    const t1 = Math.min(1, Math.max(0, p1.altitude / (Math.PI / 4)));
-    this._keyLight.position.copy(this.sun1.position);
-    this._keyLight.intensity = Math.max(0, Math.sin(p1.altitude)) * this._keyBase;
-    this._keyLight.color.setHex(lerpHex(0xff4400, 0xffcc88, t1));
+      const oc = new THREE.Vector3(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
+      this._sun1Target.copy(sunToVec3(p1.altitude, p1.azimuth, oc));
+      this._sun2Target.copy(sunToVec3(p2.altitude, az2, oc));
 
-    const t2 = Math.min(1, Math.max(0, p2.altitude / (Math.PI / 4)));
-    this._fillLight.position.copy(this.sun2.position);
-    this._fillLight.intensity = Math.max(0, Math.sin(p2.altitude)) * this._fillBase;
-    this._fillLight.color.setHex(lerpHex(0x4466ff, 0xaaddff, t2));
+      const t1 = Math.min(1, Math.max(0, p1.altitude / (Math.PI / 4)));
+      this._keyLight.intensity = Math.max(0, Math.sin(p1.altitude)) * this._keyBase;
+      this._keyLight.color.setHex(lerpHex(0xff4400, 0xffcc88, t1));
+
+      const t2 = Math.min(1, Math.max(0, p2.altitude / (Math.PI / 4)));
+      this._fillLight.intensity = Math.max(0, Math.sin(p2.altitude)) * this._fillBase;
+      this._fillLight.color.setHex(lerpHex(0x4466ff, 0xaaddff, t2));
+
+      this._lastAlt = p1.altitude;
+
+      if (!this._initialized) {
+        this.sun1.position.copy(this._sun1Target);
+        this.sun2.position.copy(this._sun2Target);
+        this._initialized = true;
+      }
+    }
+
+    if (this._initialized) {
+      const alpha = 1 - Math.exp(-8 * dt);
+      this.sun1.position.lerp(this._sun1Target, alpha);
+      this.sun2.position.lerp(this._sun2Target, alpha);
+      this._keyLight.position.copy(this.sun1.position);
+      this._fillLight.position.copy(this.sun2.position);
+    }
+
+    return this._lastAlt;
   }
 }

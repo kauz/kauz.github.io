@@ -48,7 +48,7 @@ export class ThreeScene {
 
   private _makeScene(): THREE.Scene {
     const s = new THREE.Scene();
-    s.fog = new THREE.FogExp2(0x1e0800, 0.00058);
+    s.fog = new THREE.FogExp2(0x0a0414, 0.00058);
     return s;
   }
 

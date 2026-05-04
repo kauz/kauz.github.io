@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ThreeScene } from './ThreeScene.js';
 import { BinarySunSystem } from './SunSystem.js';
+import { SkyDome } from './SkyDome.js';
 import { ModelLoader, findHelmet } from './ModelLoader.js';
 import { Droid } from './Droid.js';
 import { DustSystem } from './DustSystem.js';
@@ -8,6 +9,9 @@ import { HelmetNod } from './HelmetNod.js';
 import { HelmetHearts } from './HelmetHearts.js';
 
 const ts = new ThreeScene();
+const skyDome = new SkyDome();
+ts.scene.add(skyDome.mesh);
+
 const droid = new Droid();
 const dust = new DustSystem();
 const helmetNod = new HelmetNod();
@@ -53,9 +57,13 @@ new ModelLoader().load('/404/mando_405.gltf').then((gltf) => {
   ts.fillLight.target.position.copy(helmPos);
   ts.fillLight.target.updateMatrixWorld();
 
+  skyDome.mesh.position.copy(helmPos);
+
   sunSystem = new BinarySunSystem(ts.keyLight, ts.fillLight);
   ts.scene.add(sunSystem.sun1, sunSystem.sun2, gltf.scene);
-  sunSystem.update(helmPos);
+  const initAlt = sunSystem.update(helmPos);
+  skyDome.update(initAlt);
+  (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
 
   dust.init(helmPos);
   droid.group.position.set(helmPos.x + 60, helmPos.y + 25, helmPos.z + 50);
@@ -66,7 +74,9 @@ function animate() {
   const t = clock.getElapsedTime();
   ts.cam.update();
   if (sunSystem) {
-    sunSystem.update(helmPos);
+    const sunAlt = sunSystem.update(helmPos);
+    skyDome.update(sunAlt);
+    (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
     helmetNod.update();
     helmetHearts.update();
     droid.update(helmPos, ts.cam.mouse, t);

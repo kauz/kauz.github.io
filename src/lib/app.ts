@@ -66,7 +66,6 @@ export class App {
     document.addEventListener('click', () => this.input.focus());
 
     this.blinkCursor.classList.add('is-hidden');
-    this.startZeroG();
   }
 
   async boot(): Promise<void> {

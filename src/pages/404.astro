@@ -7,11 +7,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>404 — Signal Lost in the Outer Rim</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/assets/favicon.png" />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +40,7 @@
       }
       @keyframes spin { to { transform: rotate(360deg); } }
       .loader-text {
-        font-family: 'Cinzel', serif;
+        font-family: "Orbitron", sans-serif;
         font-size: 10px; letter-spacing: 4px;
         color: rgba(196,146,42,0.7);
       }
@@ -61,7 +59,9 @@
       }
 
       .tag-404 {
-        font-family: 'Cinzel', serif; font-size: 11px;
+        font-family: "Orbitron", sans-serif;
+        font-size: 3em;
+        font-weight: 900;
         letter-spacing: 6px; color: #C4922A;
         margin-bottom: 10px;
         display: flex; align-items: center; gap: 10px;
@@ -69,7 +69,8 @@
       .tag-404::before, .tag-404::after { content: '—'; }
 
       h1 {
-        font-family: 'Cinzel', serif; font-weight: 900;
+        font-family: "Orbitron", sans-serif;
+        font-weight: 400;
         font-size: clamp(26px, 4.5vw, 50px);
         color: #FFFFFF; line-height: 1.08;
         margin-bottom: 18px;
@@ -77,11 +78,15 @@
       }
 
       .btn {
-        font-family: 'Cinzel', serif; font-size: 10px;
+        font-family: "Orbitron", sans-serif;
         letter-spacing: 2px; padding: 11px 18px;
         text-decoration: none; cursor: pointer;
         display: inline-flex; align-items: center; gap: 7px;
         transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+        pointer-events: all;
+      }
+      .btn span {
+        font-size: 1.3em;
       }
       .btn-primary {
         background: rgba(196,146,42,0.12);
@@ -117,7 +122,8 @@
       #way-text {
         position: fixed; inset: 0; z-index: 50;
         display: flex; align-items: center; justify-content: center;
-        font-family: 'Cinzel', serif; font-weight: 900;
+        font-family: "Orbitron", sans-serif;
+        font-weight: 900;
         font-size: clamp(22px, 4vw, 40px); letter-spacing: 8px;
         color: #fff; pointer-events: none;
         opacity: 0; transition: opacity 0.6s ease;
@@ -137,7 +143,9 @@
         <div class="tag-404">404</div>
         <h1>SIGNAL LOST<br />IN THE<br />OUTER RIM</h1>
         <div class="cta-group">
-          <a href="/" class="btn btn-primary">⬡ RETURN TO BASE</a>
+          <a href="/" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="1.3em" fill="currentColor" version="1.0" viewBox="0 0 100 100"><path d="M53.2 1.6c-10.2 2.7-19.7 9-30.2 20C11.3 33.9 4.8 44.8 1.5 57.7c-2 7.9-1.7 17.6.6 18.1 1.3.2 1.7-1.1 2.2-8 .3-4.6 1.4-10.9 2.5-14C12.8 37 29 20.9 44.8 16c14.7-4.6 24.3-1 27.3 10.1 1.1 4 1 5.6-.5 11.2C68.9 47.1 59.1 61 54.8 61c-2.8 0-2.2-1.7 2.6-7.8C63 46.1 65 41.4 65 35.5c0-8.9-5.5-14.7-13.9-14.7-12 0-27.5 13.2-36.4 31-3.6 7.4-4.1 9.3-4.5 17-.3 7.1 0 9.7 1.7 14.4 7.2 18.9 28.5 22.2 50.6 7.8 11.7-7.6 26.2-24.5 32-37.3 5.5-11.8 7.3-28.7 3.3-29.5-1.6-.3-1.8.5-1.8 5.5C96 51.3 78.9 74.9 57.5 83c-8.1 3-18.5 3.2-23.9.4-11.6-6-9.6-22.9 4.6-38.8 4.7-5.3 7-6.7 8.2-4.7.3.5-1.2 3.1-3.4 5.9-5.4 6.8-8 12.7-8 18.7 0 13.4 11.4 18.7 24.9 11.4 8.9-4.7 19.9-16.7 25.3-27.5 3.7-7.6 4.2-9.4 4.6-17.2.3-7.1 0-9.7-1.7-14.4C82.8 2.9 69.7-2.9 53.2 1.6"/></svg>
+          <span>RETURN TO BASE</span></a>
         </div>
       </div>
 

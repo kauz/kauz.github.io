@@ -9,7 +9,7 @@ export class Debug {
   private _helpers: UpdatableHelper[] = [];
 
   constructor(scene: THREE.Scene, title = 'Debug') {
-    this._gui = new GUI({ title });
+    this._gui = new GUI({ title, closeFolders: true });
     this._scene = scene;
   }
 

@@ -71,8 +71,8 @@ export class DustSystem {
       if (pos[i * 3] - origin.x < -half) pos[i * 3] += s;
       if (pos[i * 3 + 2] - origin.z > half) pos[i * 3 + 2] -= s;
       if (pos[i * 3 + 2] - origin.z < -half) pos[i * 3 + 2] += s;
-      if (pos[i * 3 + 1] > origin.y + 100) pos[i * 3 + 1] = origin.y;
-      if (pos[i * 3 + 1] < origin.y - 5) pos[i * 3 + 1] += s * 0.003;
+      if (pos[i * 3 + 1] > origin.y + 100) pos[i * 3 + 1] -= 105;
+      if (pos[i * 3 + 1] < origin.y - 5) pos[i * 3 + 1] += 105;
     }
     const mat = this.points.material as THREE.PointsMaterial;
     const nightT = Math.max(0, Math.min(1, 1 - (sunAlt + 0.1) / 0.2));

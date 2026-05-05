@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
+import { SSAOPass } from 'three/examples/jsm/postprocessing/SSAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { CameraController } from './CameraController.js';
 
@@ -32,7 +34,7 @@ export class ThreeScene {
   }
 
   private _makeRenderer(): THREE.WebGLRenderer {
-    const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const r = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     r.setClearColor(0x000000, 0);
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     r.setSize(window.innerWidth, window.innerHeight);
@@ -48,7 +50,6 @@ export class ThreeScene {
 
   private _makeScene(): THREE.Scene {
     const s = new THREE.Scene();
-    // s.fog = new THREE.FogExp2(0x0a0414, 0.00058);
     s.fog = new THREE.Fog(0x000000, 500, 800);
     return s;
   }
@@ -62,6 +63,10 @@ export class ThreeScene {
       0.85
     );
     composer.addPass(new RenderPass(this.scene, this.cam.camera));
+    composer.addPass(new SMAAPass());
+    composer.addPass(
+      new SSAOPass(this.scene, this.cam.camera, window.innerWidth, window.innerHeight)
+    );
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
     return { composer, bloomPass };

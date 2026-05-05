@@ -45,7 +45,8 @@
   --fg-dim: #555;
   --green: #39d353;
   --red: #ff6b6b;
-  --font: 'Courier New', Courier, 'Lucida Console', monospace;
+  --font: 'Roboto', Courier, 'Lucida Console', sans-serif;
+  --terminal-font: 'Space Mono', Courier, 'Lucida Console', monospace;
   --fs: 0.95rem;
   --lh: 1.6;
   --scrollbar: #333;
@@ -83,6 +84,7 @@ a:hover {
   height: 100vh;
   height: 100dvh;
   display: flex;
+  font-family: var(--terminal-font);
   flex-direction: column;
   background: var(--win-bg);
   border: 1px solid var(--border);

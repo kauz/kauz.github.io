@@ -15,6 +15,14 @@ const postData = posts.map((p) => ({
 ---
 
 <BaseLayout title="apopov.dev">
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+  </Fragment>
   <a class="skip-link" href="#t-body">Skip to terminal</a>
   <div class="t-win" role="application" aria-label="Terminal emulator">
     <div class="t-bar" aria-hidden="true">
@@ -64,9 +72,9 @@ const postData = posts.map((p) => ({
   </p>
 
   <script>
-    import { App } from '../lib/app';
-    import { Visitor } from '../lib/visitor';
-    import { selectElements } from '../lib/elements';
+    import { App } from '../scripts/app';
+    import { Visitor } from '../scripts/visitor';
+    import { selectElements } from '../scripts/elements';
 
     const visitor = await Visitor.create();
     const app = new App(visitor, selectElements());

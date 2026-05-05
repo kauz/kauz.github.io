@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "astro": "6.1.10",
+    "lil-gui": "0.21.0",
     "suncalc": "1.9.0",
     "three": "0.184.0"
   },

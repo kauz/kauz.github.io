@@ -75,11 +75,24 @@ new ModelLoader().load('/404/mando_405.gltf').then((gltf) => {
   droid.group.position.set(helmPos.x + 60, helmPos.y + 25, helmPos.z + 50);
 });
 
+import type { Debug as DebugType } from './Debug.js';
+let dbg: DebugType | null = null;
+if (import.meta.env.DEV) {
+  import('./Debug.js').then(({ Debug }) => {
+    dbg = new Debug(ts.scene);
+    dbg.pointLight(droid.eyeLight, 'Droid Eye Light');
+    dbg.object3D(droid.group, 'Droid');
+    dbg.directionalLight(ts.keyLight, 'Key Light');
+    dbg.directionalLight(ts.fillLight, 'Fill Light');
+  });
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
   ts.cam.update();
   if (sunSystem) {
+    console.log(sunSystem.sun1.castShadow, sunSystem.sun2.castShadow);
     const sunAlt = sunSystem.update(helmPos);
     skyDome.update(sunAlt);
     (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
@@ -88,6 +101,7 @@ function animate() {
     droid.update(helmPos, ts.cam.mouse, t, sunAlt);
     dust.update(helmPos, sunAlt);
   }
+  dbg?.update();
   ts.render();
 }
 animate();

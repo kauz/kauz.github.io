@@ -24,6 +24,7 @@ const { title } = Astro.props;
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/assets/pwa-192.png" />
+    <slot name="head" />
   </head>
   <body>
     <slot />

@@ -49,6 +49,7 @@ export class ThreeScene {
   private _makeScene(): THREE.Scene {
     const s = new THREE.Scene();
     s.fog = new THREE.FogExp2(0x0a0414, 0.00058);
+    // s.fog = new THREE.Fog(0x0a0414, 50, 2000);
     return s;
   }
 
@@ -56,7 +57,7 @@ export class ThreeScene {
     const composer = new EffectComposer(this._renderer);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.6,
+      0.5,
       0.4,
       0.85
     );
@@ -73,7 +74,7 @@ export class ThreeScene {
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(2048, 2048);
     keyLight.shadow.camera.near = 1;
-    keyLight.shadow.camera.far = 2000;
+    keyLight.shadow.camera.far = 5000;
     keyLight.shadow.camera.left = -400;
     keyLight.shadow.camera.right = 400;
     keyLight.shadow.camera.top = 400;
@@ -95,6 +96,7 @@ export class ThreeScene {
     this.cam.onResize();
     this._renderer.setSize(window.innerWidth, window.innerHeight);
     this._composer.setSize(window.innerWidth, window.innerHeight);
+    this._renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this._bloomPass.resolution.set(window.innerWidth, window.innerHeight);
   }
 }

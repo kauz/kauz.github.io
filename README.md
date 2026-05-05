@@ -11,7 +11,7 @@ src/
     blog/              - markdown blog posts  ← add posts here
   layouts/
     BlogLayout.astro   - HTML shell for rendered blog posts
-  lib/                 - Some functions
+  scripts/                 - Some functions
   pages/
     index.astro        - terminal emulator (home page)
     blog/[slug].astro  - dynamic blog post pages

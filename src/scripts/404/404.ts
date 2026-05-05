@@ -31,11 +31,18 @@ helmetHearts.listenFor('ivanna');
 
 const soundBtn = document.getElementById('sound-btn');
 if (soundBtn) {
+  const audio = new Audio('/404/193c8f58-03c1-474f-af2a-cfe459d85ddc.m4a');
+  audio.loop = true;
   let soundOn = false;
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;
     soundBtn.querySelector('.sound-icon')!.textContent = soundOn ? '🔊' : '🔇';
     soundBtn.querySelector('.sound-label')!.textContent = `SOUND: ${soundOn ? 'ON' : 'OFF'}`;
+    if (soundOn) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
   });
 }
 
@@ -92,7 +99,6 @@ function animate() {
   const t = clock.getElapsedTime();
   ts.cam.update();
   if (sunSystem) {
-    console.log(sunSystem.sun1.castShadow, sunSystem.sun2.castShadow);
     const sunAlt = sunSystem.update(helmPos);
     skyDome.update(sunAlt);
     (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);

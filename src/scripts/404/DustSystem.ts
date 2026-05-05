@@ -7,7 +7,7 @@ export class DustSystem {
   private _vel: Float32Array;
   private _attr: THREE.BufferAttribute;
   private _dayColor = new THREE.Color(0xbb7722);
-  private _nightColor = new THREE.Color(0x22ff66);
+  private _nightColor = new THREE.Color(0x44ccff);
   points: THREE.Points;
 
   constructor(count = 1000, spread = 700) {

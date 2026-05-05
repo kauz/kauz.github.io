@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { listenForPhrase } from './listenForPhrase.js';
 
 function makeHeartTexture(size = 256): THREE.CanvasTexture {
   const c = document.createElement('canvas');
@@ -74,13 +75,7 @@ export class HelmetHearts {
   }
 
   listenFor(phrase: string, onActivate?: () => void): void {
-    let typed = '';
-    window.addEventListener('keydown', (e) => {
-      if (e.key.length !== 1) return;
-      typed += e.key.toLowerCase();
-      if (typed.length > phrase.length + 5) typed = typed.slice(-(phrase.length + 5));
-      if (!typed.endsWith(phrase)) return;
-      typed = '';
+    listenForPhrase(phrase, () => {
       this.show();
       onActivate?.();
     });
@@ -95,6 +90,7 @@ export class HelmetHearts {
   }
 
   update(): void {
+    if (this._opacity < 0.001 && this._target === 0) return;
     this._opacity += (this._target - this._opacity) * LERP_SPEED;
     const flicker = this._target > 0 ? 0.92 + Math.random() * 0.08 : 1;
     const pulse = 1 + Math.sin(Date.now() * 0.01) * 0.04 * this._opacity;

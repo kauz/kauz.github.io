@@ -52,8 +52,15 @@ const STOPS: Stop[] = [
   { alt: 1.57, zenith: 0x1a3868, midsky: 0x0d1840, horizon: 0x2a4a6a, ground: 0x0a1428 }, // zenith
 ];
 
-function lerpColor(a: number, b: number, t: number): THREE.Color {
-  return new THREE.Color(
+const _scratch = {
+  zenith: new THREE.Color(),
+  midsky: new THREE.Color(),
+  horizon: new THREE.Color(),
+  ground: new THREE.Color(),
+};
+
+function lerpColor(a: number, b: number, t: number, target: THREE.Color): void {
+  target.setRGB(
     (((a >> 16) & 0xff) + (((b >> 16) & 0xff) - ((a >> 16) & 0xff)) * t) / 255,
     (((a >> 8) & 0xff) + (((b >> 8) & 0xff) - ((a >> 8) & 0xff)) * t) / 255,
     ((a & 0xff) + ((b & 0xff) - (a & 0xff)) * t) / 255
@@ -72,12 +79,11 @@ function colorsAt(rawAlt: number) {
     }
   }
   const t = hi.alt === lo.alt ? 0 : (alt - lo.alt) / (hi.alt - lo.alt);
-  return {
-    zenith: lerpColor(lo.zenith, hi.zenith, t),
-    midsky: lerpColor(lo.midsky, hi.midsky, t),
-    horizon: lerpColor(lo.horizon, hi.horizon, t),
-    ground: lerpColor(lo.ground, hi.ground, t),
-  };
+  lerpColor(lo.zenith, hi.zenith, t, _scratch.zenith);
+  lerpColor(lo.midsky, hi.midsky, t, _scratch.midsky);
+  lerpColor(lo.horizon, hi.horizon, t, _scratch.horizon);
+  lerpColor(lo.ground, hi.ground, t, _scratch.ground);
+  return _scratch;
 }
 
 export class SkyDome {

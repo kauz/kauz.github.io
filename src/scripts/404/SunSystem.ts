@@ -47,7 +47,7 @@ function makeGlowTexture(): THREE.CanvasTexture {
 
 function makeSun(radius: number, color: number, texture: THREE.Texture): THREE.Group {
   const group = new THREE.Group();
-  const mat = new THREE.MeshBasicMaterial({ color });
+  const mat = new THREE.MeshBasicMaterial({ color, fog: false });
   mat.color.multiplyScalar(4); // HDR — exceeds bloom threshold
   group.add(new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 32), mat));
   const sprite = new THREE.Sprite(
@@ -80,6 +80,7 @@ export class BinarySunSystem {
   private _sun2Target = new THREE.Vector3();
   private _lastFrame = Date.now();
   private _initialized = false;
+  private _oc = new THREE.Vector3();
 
   constructor(keyLight: THREE.DirectionalLight, fillLight: THREE.DirectionalLight) {
     const tex = makeGlowTexture();
@@ -110,7 +111,8 @@ export class BinarySunSystem {
       const p2 = SunCalc.getPosition(vDate2, LAT, LNG);
       const az2 = p2.azimuth + (15 * Math.PI) / 180;
 
-      const oc = new THREE.Vector3(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
+      this._oc.set(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
+      const oc = this._oc;
       this._sun1Target.copy(sunToVec3(p1.altitude, p1.azimuth, oc));
       this._sun2Target.copy(sunToVec3(p2.altitude, az2, oc));
 

@@ -16,7 +16,7 @@ const droid = new Droid();
 const dust = new DustSystem();
 const helmetNod = new HelmetNod();
 const helmetHearts = new HelmetHearts();
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 ts.scene.add(droid.group, dust.points);
 
 const helmPos = new THREE.Vector3();
@@ -33,16 +33,17 @@ const soundBtn = document.getElementById('sound-btn');
 if (soundBtn) {
   const audio = new Audio('/404/193c8f58-03c1-474f-af2a-cfe459d85ddc.m4a');
   audio.loop = true;
-  let soundOn = false;
+  const soundIcon = soundBtn.querySelector('.sound-icon')!;
+  const soundLabel = soundBtn.querySelector('.sound-label')!;
   soundBtn.addEventListener('click', () => {
-    soundOn = !soundOn;
-    soundBtn.querySelector('.sound-icon')!.textContent = soundOn ? '🔊' : '🔇';
-    soundBtn.querySelector('.sound-label')!.textContent = `SOUND: ${soundOn ? 'ON' : 'OFF'}`;
-    if (soundOn) {
+    if (audio.paused) {
       audio.play();
     } else {
       audio.pause();
     }
+    const on = !audio.paused;
+    soundIcon.textContent = on ? '🔊' : '🔇';
+    soundLabel.textContent = `SOUND: ${on ? 'ON' : 'OFF'}`;
   });
 }
 
@@ -96,7 +97,8 @@ if (import.meta.env.DEV) {
 
 function animate() {
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
+  timer.update();
+  const t = timer.getElapsed();
   ts.cam.update();
   if (sunSystem) {
     const sunAlt = sunSystem.update(helmPos);

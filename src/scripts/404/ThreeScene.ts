@@ -37,7 +37,7 @@ export class ThreeScene {
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     r.setSize(window.innerWidth, window.innerHeight);
     r.shadowMap.enabled = true;
-    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    r.shadowMap.type = THREE.PCFShadowMap;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = 1.15;
     r.outputColorSpace = THREE.SRGBColorSpace;
@@ -48,8 +48,8 @@ export class ThreeScene {
 
   private _makeScene(): THREE.Scene {
     const s = new THREE.Scene();
-    s.fog = new THREE.FogExp2(0x0a0414, 0.00058);
-    // s.fog = new THREE.Fog(0x0a0414, 50, 2000);
+    // s.fog = new THREE.FogExp2(0x0a0414, 0.00058);
+    s.fog = new THREE.Fog(0x000000, 500, 800);
     return s;
   }
 

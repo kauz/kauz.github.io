@@ -32,6 +32,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    environment: github-pages
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -73,9 +74,9 @@ jobs:
             --base "${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
         env:
-          PUBLIC_SOCIAL_GITHUB: ${{ vars.SOCIAL_GITHUB }}
-          PUBLIC_SOCIAL_LINKEDIN: ${{ vars.SOCIAL_LINKEDIN }}
-          PUBLIC_SOCIAL_EMAIL: ${{ secrets.SOCIAL_EMAIL }}
+          PUBLIC_SOCIAL_GITHUB: ${{ vars.PUBLIC_SOCIAL_GITHUB }}
+          PUBLIC_SOCIAL_LINKEDIN: ${{ vars.PUBLIC_SOCIAL_LINKEDIN }}
+          PUBLIC_SOCIAL_EMAIL: ${{ vars.PUBLIC_SOCIAL_EMAIL }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

@@ -247,19 +247,23 @@ export class Commands {
   }
 
   private social(_args: string[]): void {
-    const rev = (s: string) => s.split('').reverse().join('');
-    const [user, domain] = SOCIAL_EMAIL.split('@');
-    const p1 = rev(user);
-    const p2 = rev(domain);
-    this.output.outHTML(
-      `GitHub    <a href="${SOCIAL_GITHUB}" target="_blank" rel="noopener">${SOCIAL_GITHUB.replace('https://', '')}</a>`
-    );
-    this.output.outHTML(
-      `LinkedIn  <a href="${SOCIAL_LINKEDIN}" target="_blank" rel="noopener">${SOCIAL_LINKEDIN.replace('https://', '')}</a>`
-    );
-    this.output.outHTML(
-      `Email     <span class="dont-look-here" data-p1="${p1}" data-p2="${p2}" onclick="var r=function(s){return s.split('').reverse().join('')};var e=r(this.dataset.p1)+'@'+r(this.dataset.p2);var a=document.createElement('a');a.href='mailto:'+e;a.textContent=e;this.replaceWith(a)">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>`
-    );
+    if (SOCIAL_GITHUB)
+      this.output.outHTML(
+        `GitHub    <a href="${SOCIAL_GITHUB}" target="_blank" rel="noopener">${SOCIAL_GITHUB.replace('https://', '')}</a>`
+      );
+    if (SOCIAL_LINKEDIN)
+      this.output.outHTML(
+        `LinkedIn  <a href="${SOCIAL_LINKEDIN}" target="_blank" rel="noopener">${SOCIAL_LINKEDIN.replace('https://', '')}</a>`
+      );
+    if (SOCIAL_EMAIL) {
+      const rev = (s: string) => s.split('').reverse().join('');
+      const [user, domain] = SOCIAL_EMAIL.split('@');
+      const p1 = rev(user);
+      const p2 = rev(domain);
+      this.output.outHTML(
+        `Email     <span class="dont-look-here" data-p1="${p1}" data-p2="${p2}" onclick="var r=function(s){return s.split('').reverse().join('')};var e=r(this.dataset.p1)+'@'+r(this.dataset.p2);var a=document.createElement('a');a.href='mailto:'+e;a.textContent=e;this.replaceWith(a)">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>`
+      );
+    }
   }
 
   private clear(_args: string[]): void {

@@ -136,7 +136,6 @@ export class App {
     const rand = (scale: number) => (Math.random() - 0.5) * scale;
     const margin = 20;
 
-    // 1. Helper to turn an element into an animatable state object
     const createState = (el: HTMLElement) => ({
       el,
       x: 0,
@@ -147,10 +146,8 @@ export class App {
       vr: rand(0.07),
     });
 
-    // 2. Initialize with existing elements
     const states = ([...Array.from(output.children), inputRow] as HTMLElement[]).map(createState);
 
-    // 3. Subscribe to new elements added to #output
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
@@ -168,7 +165,6 @@ export class App {
       const W = body.clientWidth;
       const H = body.clientHeight;
 
-      // Batch reads to avoid layout thrashing
       const rects = states.map((s) => s.el.getBoundingClientRect());
 
       for (let i = 0; i < states.length; i++) {
@@ -184,7 +180,6 @@ export class App {
         const vTop = r.top - bRect.top;
         const vBottom = r.bottom - bRect.top;
 
-        // Bounce Logic
         if (vRight < margin) {
           s.x += margin - vRight;
           s.vx = Math.abs(s.vx);
@@ -208,9 +203,6 @@ export class App {
     };
 
     this.zeroGRaf = requestAnimationFrame(tick);
-
-    // Optional: Store observer to disconnect it when zero-g is stopped
-    // this.zeroGObserver = observer;
   }
 
   private handleKeydown(e: KeyboardEvent): void {

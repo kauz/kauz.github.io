@@ -153,7 +153,6 @@ export class Visitor implements IVisitor {
     canvas.width = 200;
     canvas.height = 50;
 
-    ctx.textBaseline = 'top';
     ctx.font = "14px 'Arial'";
     ctx.textBaseline = 'alphabetic';
 

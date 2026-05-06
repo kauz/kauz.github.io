@@ -77,7 +77,7 @@ new ModelLoader().load('/404/mando_405.gltf').then((gltf) => {
   ts.scene.add(sunSystem.sun1, sunSystem.sun2, gltf.scene);
   const initAlt = sunSystem.update(helmPos);
   skyDome.update(initAlt);
-  (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
+  (ts.scene.fog as THREE.Fog).color.copy(skyDome.horizonColor);
 
   dust.init(helmPos);
   droid.group.position.set(helmPos.x + 60, helmPos.y + 25, helmPos.z + 50);
@@ -103,7 +103,7 @@ function animate() {
   if (sunSystem) {
     const sunAlt = sunSystem.update(helmPos);
     skyDome.update(sunAlt);
-    (ts.scene.fog as THREE.FogExp2).color.copy(skyDome.horizonColor);
+    (ts.scene.fog as THREE.Fog).color.copy(skyDome.horizonColor);
     helmetNod.update();
     helmetHearts.update();
     droid.update(helmPos, ts.cam.mouse, t, sunAlt);

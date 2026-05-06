@@ -42,7 +42,7 @@
   --bar-bg: #1c1c1c;
   --border: #2c2c2c;
   --fg: #d0d0d0;
-  --fg-dim: #555;
+  --fg-dim: #787878;
   --green: #39d353;
   --red: #ff6b6b;
   --font: 'Roboto', Courier, 'Lucida Console', sans-serif;
@@ -50,6 +50,8 @@
   --fs: 0.95rem;
   --lh: 1.6;
   --scrollbar: #333;
+  --surface: #1a1a1a;
+  --border-subtle: #2a2a2a;
 }
 
 /* ── Base ──────────────────────────────────────────────── */
@@ -262,7 +264,7 @@ a:hover {
 .post-header {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .post-header h1 {
@@ -294,7 +296,7 @@ a:hover {
 }
 
 .prose code {
-  background: #1a1a1a;
+  background: var(--surface);
   padding: 0.1em 0.4em;
   border-radius: 3px;
   font: inherit;
@@ -302,7 +304,7 @@ a:hover {
 }
 
 .prose pre {
-  background: #1a1a1a;
+  background: var(--surface);
   border-left: 3px solid var(--green);
   padding: 1rem;
   overflow-x: auto;
@@ -335,7 +337,7 @@ a:hover {
 
 .prose hr {
   border: none;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--border-subtle);
   margin: 2rem 0;
 }
 
@@ -451,6 +453,10 @@ a:hover {
     transform: none;
     transition: none;
   }
+  .cursor {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* ── Email spoiler ──────────────────────────────────────── */
@@ -470,14 +476,6 @@ a:hover {
   overflow: hidden;
 }
 
-/* ── Reduced motion ─────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .cursor {
-    animation: none;
-    opacity: 1;
-  }
-}
-
 /* ── Themes ──────────────────────────────────────────────── */
 
 /* Light */
@@ -487,10 +485,12 @@ a:hover {
   --bar-bg: #e4e4e4;
   --border: #cccccc;
   --fg: #1a1a1a;
-  --fg-dim: #888888;
+  --fg-dim: #666666;
   --green: #1a7f37;
   --red: #d1242f;
   --scrollbar: #bbb;
+  --surface: #e4e4e4;
+  --border-subtle: #d0d0d0;
 }
 
 /* High contrast: WCAG AAA–friendly yellow-on-black */
@@ -503,6 +503,8 @@ a:hover {
   --fg-dim: #cccccc;
   --green: #ffff00;
   --red: #ff6666;
+  --surface: #111111;
+  --border-subtle: #555555;
 }
 
 /* Deuteranopia / protanopia: swap green → blue, red → orange */
@@ -518,9 +520,11 @@ a:hover {
   --bar-bg: #e0dac8;
   --border: #cdc6b0;
   --fg: #657b83;
-  --fg-dim: #93a1a1;
+  --fg-dim: #586e75;
   --green: #2aa198;
   --red: #dc322f;
+  --surface: #e0dac8;
+  --border-subtle: #cdc6b0;
 }
 
 /* ── Responsive ────────────────────────────────────────── */

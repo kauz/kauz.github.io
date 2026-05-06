@@ -15,17 +15,21 @@ for (const post of posts) {
 const years = [...byYear.keys()].sort((a, b) => b - a);
 ---
 
-<BaseLayout title="Blog — apopov.dev">
+<BaseLayout
+  title="Blog — apopov.dev"
+  description="Blog posts by Artem Popov — software engineering, web development, and more."
+>
   <Fragment slot="head">
     <link rel="alternate" type="application/atom+xml" href="/feed.xml" title="RSS" />
   </Fragment>
 
-  <div class="blog-wrap">
-    <a class="back" href={import.meta.env.BASE_URL}>← terminal</a>
+  <a class="skip-link" href="#blog-main">Skip to posts</a>
+  <main id="blog-main" class="blog-wrap">
+    <a class="back" href={import.meta.env.BASE_URL} aria-label="Back to terminal">← terminal</a>
 
     <div class="blog-list-header">
       <h1>Blog</h1>
-      <a class="feed-link" href="/feed.xml" title="Atom feed">RSS</a>
+      <a class="feed-link" href="/feed.xml" title="Atom feed" target="_blank">RSS</a>
     </div>
 
     {
@@ -57,7 +61,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
         ))
       )
     }
-  </div>
+  </main>
 
   <script>
     document.addEventListener('keydown', (e) => {

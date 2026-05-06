@@ -2,7 +2,7 @@ import type { IOutput } from './types.ts';
 
 const SOCIAL_GITHUB = import.meta.env.PUBLIC_SOCIAL_GITHUB ?? '';
 const SOCIAL_LINKEDIN = import.meta.env.PUBLIC_SOCIAL_LINKEDIN ?? '';
-const SOCIAL_EMAIL = import.meta.env.PUBLIC_SOCIAL_EMAIL ?? '';
+const SOCIAL_EMAIL = 'sdfsdf@sdfsdf.df';
 
 type Post = { slug: string; title: string; date: string; description: string };
 
@@ -261,7 +261,7 @@ export class Commands {
       const p1 = rev(user);
       const p2 = rev(domain);
       this.output.outHTML(
-        `Email     <span class="dont-look-here" data-p1="${p1}" data-p2="${p2}" onclick="var r=function(s){return s.split('').reverse().join('')};var e=r(this.dataset.p1)+'@'+r(this.dataset.p2);var a=document.createElement('a');a.href='mailto:'+e;a.textContent=e;this.replaceWith(a)">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>`
+        `Email     <span class="dont-look-here" role="button" tabindex="0" aria-label="Reveal email address" data-p1="${p1}" data-p2="${p2}" onclick="var r=function(s){return s.split('').reverse().join('')};var e=r(this.dataset.p1)+'@'+r(this.dataset.p2);var a=document.createElement('a');a.href='mailto:'+e;a.textContent=e;this.replaceWith(a)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>`
       );
     }
   }

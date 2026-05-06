@@ -11,6 +11,8 @@ import '../styles/404.css';
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap"
       rel="stylesheet"
     />
+    <link rel="preload" as="fetch" href="/404/mando_405.gltf" crossorigin />
+    <link rel="preload" as="fetch" href="/404/mando_405.bin" crossorigin />
   </Fragment>
 
   <div id="loader">
@@ -50,6 +52,8 @@ import '../styles/404.css';
   <div id="way-text">THIS IS THE WAY.</div>
 
   <script>
-    import '../scripts/404/404.ts';
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+      await import('../scripts/404/404.ts');
+    }
   </script>
 </BaseLayout>

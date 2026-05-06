@@ -38,9 +38,10 @@ export class CameraController {
     this.camera.updateProjectionMatrix();
   }
 
-  update(): void {
-    this.mouse.x += (this._mouseRaw.x - this.mouse.x) * 0.06;
-    this.mouse.y += (this._mouseRaw.y - this.mouse.y) * 0.06;
+  update(dt: number): void {
+    const alpha = 1 - Math.exp(-3.71 * dt);
+    this.mouse.x += (this._mouseRaw.x - this.mouse.x) * alpha;
+    this.mouse.y += (this._mouseRaw.y - this.mouse.y) * alpha;
     this.camera.position.x = this._base.x + this.mouse.x * 1.5;
     this.camera.position.y = this._base.y - this.mouse.y * 1.5;
     this.camera.lookAt(this._target);

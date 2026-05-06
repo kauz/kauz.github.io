@@ -15,9 +15,9 @@ const ORBIT_X = 685;
 
 // SunCalc azimuth: 0=south, +π/2=west, -π/2=east
 // Scene coords:    North=-Z, East=+X, Up=+Y  →  South=+Z
-function sunToVec3(alt: number, scAz: number, center: THREE.Vector3): THREE.Vector3 {
+function sunToVec3(alt: number, scAz: number, center: THREE.Vector3, out: THREE.Vector3): void {
   const cosAlt = Math.cos(alt);
-  return new THREE.Vector3(
+  out.set(
     center.x - Math.sin(scAz) * cosAlt * SKY_R,
     center.y + Math.sin(alt) * SKY_R,
     center.z + Math.cos(scAz) * cosAlt * SKY_R
@@ -113,8 +113,8 @@ export class BinarySunSystem {
 
       this._oc.set(center.x + ORBIT_X, center.y, center.z + ORBIT_Z);
       const oc = this._oc;
-      this._sun1Target.copy(sunToVec3(p1.altitude, p1.azimuth, oc));
-      this._sun2Target.copy(sunToVec3(p2.altitude, az2, oc));
+      sunToVec3(p1.altitude, p1.azimuth, oc, this._sun1Target);
+      sunToVec3(p2.altitude, az2, oc, this._sun2Target);
 
       const t1 = Math.min(1, Math.max(0, p1.altitude / (Math.PI / 4)));
       this._keyLight.intensity = Math.max(0, Math.sin(p1.altitude)) * this._keyBase;

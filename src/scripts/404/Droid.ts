@@ -69,10 +69,17 @@ export class Droid {
     this.group = g;
   }
 
-  update(helmPos: THREE.Vector3, mouse: THREE.Vector2, t: number, sunAlt: number): void {
+  update(
+    helmPos: THREE.Vector3,
+    mouse: THREE.Vector2,
+    t: number,
+    sunAlt: number,
+    dt: number
+  ): void {
     const g = this.group;
-    g.position.x += (helmPos.x - 20 + mouse.x * 25 - g.position.x) * 0.025;
-    g.position.z += (helmPos.z + 60 + mouse.y * 15 - g.position.z) * 0.025;
+    const alpha = 1 - Math.exp(-1.52 * dt);
+    g.position.x += (helmPos.x - 20 + mouse.x * 25 - g.position.x) * alpha;
+    g.position.z += (helmPos.z + 60 + mouse.y * 15 - g.position.z) * alpha;
     g.position.y = helmPos.y + 25 + Math.sin(t * 1.4) * 3;
     g.rotation.y = Math.sin(t * 1) * 0.3 - 30;
     g.rotation.z = Math.sin(t * 0.6) * 0.12 - 0.08;

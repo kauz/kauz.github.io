@@ -174,3 +174,30 @@ h1 {
 #way-text.show {
   opacity: 1;
 }
+
+/* Mobile fallback */
+@media (max-width: 768px) {
+  html,
+  body {
+    background: #06030f url('/assets/404-mobile-bg.webp') center/cover no-repeat;
+  }
+
+  #loader {
+    display: none;
+  }
+
+  #main-content {
+    padding: 0 24px;
+    max-width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+
+  #bottom-bar {
+    padding: 16px 24px;
+  }
+
+  #sound-btn {
+    visibility: hidden;
+  }
+}

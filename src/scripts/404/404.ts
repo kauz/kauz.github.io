@@ -98,15 +98,16 @@ if (import.meta.env.DEV) {
 function animate() {
   requestAnimationFrame(animate);
   timer.update();
+  const dt = timer.getDelta();
   const t = timer.getElapsed();
-  ts.cam.update();
+  ts.cam.update(dt);
   if (sunSystem) {
     const sunAlt = sunSystem.update(helmPos);
     skyDome.update(sunAlt);
     (ts.scene.fog as THREE.Fog).color.copy(skyDome.horizonColor);
     helmetNod.update();
     helmetHearts.update();
-    droid.update(helmPos, ts.cam.mouse, t, sunAlt);
+    droid.update(helmPos, ts.cam.mouse, t, sunAlt, dt);
     dust.update(helmPos, sunAlt);
   }
   dbg?.update();

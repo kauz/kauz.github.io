@@ -228,7 +228,7 @@ export class Commands {
     const flag = args[0];
     if (flag === '-w' || flag === '--web') {
       this.output.out('Opening blog listing…', 'out-dim');
-      setTimeout(() => window.open(this.base + 'blog/', '_blank'), 150);
+      setTimeout(() => window.open(this.base + 'blog/', '_self'), 150);
     } else if (flag) {
       this.openPost(flag);
     } else {

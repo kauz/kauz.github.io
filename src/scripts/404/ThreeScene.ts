@@ -15,14 +15,18 @@ export class ThreeScene {
   private _renderer: THREE.WebGLRenderer;
   private _composer: EffectComposer;
   private _bloomPass: UnrealBloomPass;
+  private _ssaoPass: SSAOPass;
+  private _smaaPass: SMAAPass;
 
   constructor() {
     this._renderer = this._makeRenderer();
     this.scene = this._makeScene();
     this.cam = new CameraController();
-    const { composer, bloomPass } = this._makeComposer();
+    const { composer, bloomPass, ssaoPass, smaaPass } = this._makeComposer();
     this._composer = composer;
     this._bloomPass = bloomPass;
+    this._ssaoPass = ssaoPass;
+    this._smaaPass = smaaPass;
     const { keyLight, fillLight } = this._makeLights();
     this.keyLight = keyLight;
     this.fillLight = fillLight;
@@ -54,7 +58,12 @@ export class ThreeScene {
     return s;
   }
 
-  private _makeComposer(): { composer: EffectComposer; bloomPass: UnrealBloomPass } {
+  private _makeComposer(): {
+    composer: EffectComposer;
+    bloomPass: UnrealBloomPass;
+    ssaoPass: SSAOPass;
+    smaaPass: SMAAPass;
+  } {
     const composer = new EffectComposer(this._renderer);
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -62,14 +71,28 @@ export class ThreeScene {
       0.4,
       0.85
     );
-    composer.addPass(new RenderPass(this.scene, this.cam.camera));
-    composer.addPass(new SMAAPass());
-    composer.addPass(
-      new SSAOPass(this.scene, this.cam.camera, window.innerWidth, window.innerHeight)
+    const smaaPass = new SMAAPass();
+    const ssaoPass = new SSAOPass(
+      this.scene,
+      this.cam.camera,
+      window.innerWidth,
+      window.innerHeight
     );
+    composer.addPass(new RenderPass(this.scene, this.cam.camera));
+    composer.addPass(smaaPass);
+    composer.addPass(ssaoPass);
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
-    return { composer, bloomPass };
+    return { composer, bloomPass, ssaoPass, smaaPass };
+  }
+
+  setQualityTier(tier: 'medium' | 'low'): void {
+    this._ssaoPass.enabled = false;
+    if (tier === 'low') {
+      this._smaaPass.enabled = false;
+      this._renderer.setPixelRatio(1);
+      this._composer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 
   private _makeLights(): { keyLight: THREE.DirectionalLight; fillLight: THREE.DirectionalLight } {

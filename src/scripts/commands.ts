@@ -1,5 +1,9 @@
 import type { IOutput } from './types.ts';
 
+const SOCIAL_GITHUB = import.meta.env.PUBLIC_SOCIAL_GITHUB ?? '';
+const SOCIAL_LINKEDIN = import.meta.env.PUBLIC_SOCIAL_LINKEDIN ?? '';
+const SOCIAL_EMAIL = import.meta.env.PUBLIC_SOCIAL_EMAIL ?? '';
+
 type Post = { slug: string; title: string; date: string; description: string };
 
 export interface CommandsCtx {
@@ -24,6 +28,8 @@ export const COMMAND_NAMES = [
   'cv',
   'blog',
   'open',
+  'feed',
+  'rss',
   'social',
   'clear',
   'date',
@@ -56,7 +62,7 @@ export class Commands {
     this.slugs = ctx.slugs;
     this.getVisitorSlug = ctx.getVisitorSlug;
     this.completions = {
-      blog: () => this.slugs,
+      blog: () => ['-w', ...this.slugs],
       open: () => this.slugs,
       cd: () => this.fs[this.getCwd()] ?? [],
       ls: () => this.fs[this.getCwd()] ?? [],
@@ -83,6 +89,10 @@ export class Commands {
         break;
       case 'open':
         this.open(args);
+        break;
+      case 'feed':
+      case 'rss':
+        this.feed(args);
         break;
       case 'social':
         this.social(args);
@@ -173,8 +183,11 @@ export class Commands {
       ['skills', 'Tech stack'],
       ['cv', 'Download my CV (PDF)'],
       ['blog', 'List blog posts'],
+      ['blog -w', 'Open blog listing in browser'],
       ['blog <slug>', 'Open a post'],
       ['open <slug>', 'Open a post (alias)'],
+      ['feed', 'Open Atom feed'],
+      ['rss', 'Alias for feed'],
       ['social', 'Links — GitHub, LinkedIn, email'],
       ['ls [path]', 'List directory contents'],
       ['cd [path]', 'Change directory'],
@@ -212,8 +225,20 @@ export class Commands {
   }
 
   private blog(args: string[]): void {
-    if (args.length > 0) this.openPost(args[0]);
-    else this.listPosts();
+    const flag = args[0];
+    if (flag === '-w' || flag === '--web') {
+      this.output.out('Opening blog listing…', 'out-dim');
+      setTimeout(() => window.open(this.base + 'blog/', '_blank'), 150);
+    } else if (flag) {
+      this.openPost(flag);
+    } else {
+      this.listPosts();
+    }
+  }
+
+  private feed(_args: string[]): void {
+    this.output.out('Opening Atom feed…', 'out-dim');
+    setTimeout(() => window.open(this.base + 'feed.xml', '_blank'), 150);
   }
 
   private open(args: string[]): void {
@@ -222,13 +247,19 @@ export class Commands {
   }
 
   private social(_args: string[]): void {
+    const rev = (s: string) => s.split('').reverse().join('');
+    const [user, domain] = SOCIAL_EMAIL.split('@');
+    const p1 = rev(user);
+    const p2 = rev(domain);
     this.output.outHTML(
-      'GitHub    <a href="https://github.com/kauz" target="_blank" rel="noopener">github.com/apopov</a>'
+      `GitHub    <a href="${SOCIAL_GITHUB}" target="_blank" rel="noopener">${SOCIAL_GITHUB.replace('https://', '')}</a>`
     );
     this.output.outHTML(
-      'LinkedIn  <a href="https://www.linkedin.com/in/artyom-popov/" target="_blank" rel="noopener">linkedin.com/in/apopov</a>'
+      `LinkedIn  <a href="${SOCIAL_LINKEDIN}" target="_blank" rel="noopener">${SOCIAL_LINKEDIN.replace('https://', '')}</a>`
     );
-    this.output.outHTML('Email     <a href="mailto:hello@apopov.dev">hello@apopov.dev</a>');
+    this.output.outHTML(
+      `Email     <span class="dont-look-here" data-p1="${p1}" data-p2="${p2}" onclick="var r=function(s){return s.split('').reverse().join('')};var e=r(this.dataset.p1)+'@'+r(this.dataset.p2);var a=document.createElement('a');a.href='mailto:'+e;a.textContent=e;this.replaceWith(a)">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>`
+    );
   }
 
   private clear(_args: string[]): void {

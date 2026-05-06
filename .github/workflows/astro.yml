@@ -72,6 +72,10 @@ jobs:
             --site "${{ steps.pages.outputs.origin }}" \
             --base "${{ steps.pages.outputs.base_path }}"
         working-directory: ${{ env.BUILD_PATH }}
+        env:
+          PUBLIC_SOCIAL_GITHUB: ${{ vars.SOCIAL_GITHUB }}
+          PUBLIC_SOCIAL_LINKEDIN: ${{ vars.SOCIAL_LINKEDIN }}
+          PUBLIC_SOCIAL_EMAIL: ${{ secrets.SOCIAL_EMAIL }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

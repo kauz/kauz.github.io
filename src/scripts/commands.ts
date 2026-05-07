@@ -168,7 +168,7 @@ export class Commands {
     if (post) {
       this.output.out(`Opening "${post.title}"…`, 'out-dim');
       setTimeout(() => {
-        window.location.href = this.base + 'blog/' + slug;
+        window.location.href = this.base + 'blog/' + slug + '/';
       }, 250);
     } else {
       this.output.out('Post not found: ' + slug, 'out-err');

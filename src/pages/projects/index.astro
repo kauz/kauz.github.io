@@ -1,0 +1,91 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const byYear = new Map<number, typeof projects>();
+for (const project of projects) {
+  const y = project.data.date.getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(project);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<BaseLayout
+  title="Projects — apopov.dev"
+  description="Projects by Artem Popov — software engineering and web development."
+>
+  <a class="skip-link" href="#projects-main">Skip to projects</a>
+  <main id="projects-main" class="blog-wrap">
+    <a class="back" href={import.meta.env.BASE_URL} aria-label="Back to terminal">← terminal</a>
+
+    <div class="blog-list-header">
+      <h1>Projects</h1>
+    </div>
+
+    {
+      projects.length === 0 ? (
+        <p class="out-dim">No projects yet.</p>
+      ) : (
+        years.map((year) => (
+          <section class="year-group">
+            <h2 class="year-heading">{year}</h2>
+            <ul class="post-list">
+              {byYear.get(year)!.map((project) => {
+                const dateStr = project.data.date.toISOString().slice(0, 10);
+                return (
+                  <li class="post-item" data-reveal>
+                    <a href={`${import.meta.env.BASE_URL}projects/${project.id}`} class="post-link">
+                      <time datetime={dateStr} class="post-date">
+                        {dateStr}
+                      </time>
+                      <span class="post-title">{project.data.title}</span>
+                      {project.data.description && (
+                        <span class="post-desc">{project.data.description}</span>
+                      )}
+                      {project.data.tech && project.data.tech.length > 0 && (
+                        <span class="post-desc">{project.data.tech.join(' · ')}</span>
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ))
+      )
+    }
+  </main>
+
+  <script>
+    document.addEventListener('keydown', (e) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'PageUp' || e.key === 'Backspace') {
+        e.preventDefault();
+        window.location.href = import.meta.env.BASE_URL;
+      }
+    });
+
+    const items = document.querySelectorAll<HTMLElement>('[data-reveal]');
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add('revealed');
+              obs.unobserve(e.target);
+            }
+          }
+        },
+        { threshold: 0.05 }
+      );
+      for (const el of items) obs.observe(el);
+    } else {
+      for (const el of items) el.classList.add('revealed');
+    }
+  </script>
+</BaseLayout>

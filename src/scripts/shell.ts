@@ -1,12 +1,13 @@
-import type { IOutput } from './types.ts';
+import type { IOutput, Post, Project } from './types.ts';
 import { Commands } from './commands.ts';
-
-type Post = { slug: string; title: string; date: string; description: string };
 
 interface Ctx {
   postData: Post[];
+  projectData: Project[];
   output: IOutput;
   visitorSlug: string;
+  visitorName: string;
+  getHistory: () => readonly string[];
   onCwdChange: () => void;
 }
 
@@ -18,19 +19,24 @@ export class Shell {
   private prevCwd = '~';
   private promptSymbol = '$';
   private visitorSlug: string;
+  private readonly visitorName: string;
 
   constructor(ctx: Ctx) {
     this.output = ctx.output;
     this.visitorSlug = ctx.visitorSlug;
+    this.visitorName = ctx.visitorName;
     this.onCwdChange = ctx.onCwdChange;
     const base = import.meta.env.BASE_URL;
     const slugs = ctx.postData.map((p) => p.slug);
+    const projectSlugs = ctx.projectData.map((p) => p.slug);
     const fs: Record<string, string[]> = {
-      '~': ['blog/'],
+      '~': ['blog/', 'projects/'],
       '~/blog': slugs.map((s) => s + '.md'),
+      '~/projects': projectSlugs.map((s) => s + '.md'),
     };
     this.commands = new Commands({
       postData: ctx.postData,
+      projectData: ctx.projectData,
       output: ctx.output,
       getCwd: () => this.cwd,
       setCwd: (cwd) => this.setCwd(cwd),
@@ -38,7 +44,10 @@ export class Shell {
       base,
       fs,
       slugs,
+      projectSlugs,
       getVisitorSlug: () => this.visitorSlug,
+      getVisitorName: () => this.visitorName,
+      getHistory: ctx.getHistory,
     });
   }
 

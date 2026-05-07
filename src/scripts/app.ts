@@ -41,8 +41,11 @@ export class App {
     this.terminal = new Terminal(elements.output, elements.termBody, () => this.shell.getPrompt());
     this.shell = new Shell({
       postData: elements.postData,
+      projectData: elements.projectData,
       output: this.terminal,
       visitorSlug: visitor.slug,
+      visitorName: visitor.name,
+      getHistory: () => this.history,
       onCwdChange: () => {
         const prompt = this.shell.getPrompt();
         this.promptEl.textContent = prompt;

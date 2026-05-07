@@ -1,3 +1,13 @@
+export type Post = { slug: string; title: string; date: string; description: string };
+export type Project = {
+  slug: string;
+  title: string;
+  date: string;
+  description: string;
+  tech: string[];
+  url: string;
+};
+
 export interface IOutput {
   out(text: string, cls?: string): void;
   outHTML(html: string, cls?: string): void;
@@ -18,5 +28,6 @@ export interface IAppElements {
   blinkCursor: HTMLElement;
   promptEl: HTMLElement;
   titleEl: HTMLElement;
-  postData: { slug: string; title: string; date: string; description: string }[];
+  postData: Post[];
+  projectData: Project[];
 }

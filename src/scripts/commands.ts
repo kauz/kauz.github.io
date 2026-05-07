@@ -1,13 +1,13 @@
-import type { IOutput } from './types.ts';
+import type { IOutput, Post, Project } from './types.ts';
+import { CHARACTER_DATA } from './characterData.ts';
 
 const SOCIAL_GITHUB = import.meta.env.PUBLIC_SOCIAL_GITHUB ?? '';
 const SOCIAL_LINKEDIN = import.meta.env.PUBLIC_SOCIAL_LINKEDIN ?? '';
-const SOCIAL_EMAIL = 'sdfsdf@sdfsdf.df';
-
-type Post = { slug: string; title: string; date: string; description: string };
+const SOCIAL_EMAIL = import.meta.env.PUBLIC_SOCIAL_EMAIL ?? '';
 
 export interface CommandsCtx {
   postData: Post[];
+  projectData: Project[];
   output: IOutput;
   getCwd: () => string;
   setCwd: (cwd: string) => void;
@@ -15,7 +15,10 @@ export interface CommandsCtx {
   base: string;
   fs: Record<string, string[]>;
   slugs: string[];
+  projectSlugs: string[];
   getVisitorSlug: () => string;
+  getVisitorName: () => string;
+  getHistory: () => readonly string[];
 }
 
 const THEMES = ['default', 'light', 'high-contrast', 'deuteranopia', 'solarized-light'] as const;
@@ -37,10 +40,21 @@ export const COMMAND_NAMES = [
   'cd',
   'echo',
   'theme',
+  'projects',
+  'timeline',
+  'whoami',
+  'pwd',
+  'cat',
+  'history',
+  'man',
+  'vim',
+  'nano',
+  'cowsay',
 ] as const;
 
 export class Commands {
   private readonly postData: Post[];
+  private readonly projectData: Project[];
   private readonly output: IOutput;
   private readonly getCwd: () => string;
   private readonly setCwd: (cwd: string) => void;
@@ -48,11 +62,15 @@ export class Commands {
   private readonly base: string;
   private readonly fs: Record<string, string[]>;
   private readonly slugs: string[];
+  private readonly projectSlugs: string[];
   private readonly getVisitorSlug: () => string;
+  private readonly getVisitorName: () => string;
+  private readonly getHistory: () => readonly string[];
   private readonly completions: Record<string, () => string[]>;
 
   constructor(ctx: CommandsCtx) {
     this.postData = ctx.postData;
+    this.projectData = ctx.projectData;
     this.output = ctx.output;
     this.getCwd = ctx.getCwd;
     this.setCwd = ctx.setCwd;
@@ -60,13 +78,19 @@ export class Commands {
     this.base = ctx.base;
     this.fs = ctx.fs;
     this.slugs = ctx.slugs;
+    this.projectSlugs = ctx.projectSlugs;
     this.getVisitorSlug = ctx.getVisitorSlug;
+    this.getVisitorName = ctx.getVisitorName;
+    this.getHistory = ctx.getHistory;
     this.completions = {
       blog: () => ['-w', ...this.slugs],
       open: () => this.slugs,
       cd: () => this.fs[this.getCwd()] ?? [],
       ls: () => this.fs[this.getCwd()] ?? [],
+      cat: () => this.fs[this.getCwd()] ?? [],
       theme: () => [...THEMES],
+      projects: () => ['-w', ...this.projectSlugs],
+      man: () => [...COMMAND_NAMES],
     };
   }
 
@@ -115,6 +139,36 @@ export class Commands {
       case 'theme':
         this.theme(args);
         break;
+      case 'projects':
+        this.projects(args);
+        break;
+      case 'timeline':
+        this.timeline(args);
+        break;
+      case 'whoami':
+        this.whoami(args);
+        break;
+      case 'pwd':
+        this.pwd(args);
+        break;
+      case 'cat':
+        this.cat(args);
+        break;
+      case 'history':
+        this.history(args);
+        break;
+      case 'man':
+        this.man(args);
+        break;
+      case 'vim':
+        this.vim(args);
+        break;
+      case 'nano':
+        this.nano(args);
+        break;
+      case 'cowsay':
+        this.cowsay(args);
+        break;
       case 'sudo':
         this.sudo(args);
         break;
@@ -149,30 +203,39 @@ export class Commands {
     return abs in this.fs ? abs : null;
   }
 
-  private listPosts(): void {
-    if (this.postData.length === 0) {
-      this.output.out('No posts yet.');
+  private listContent(
+    items: { slug: string; date: string; title: string }[],
+    urlPrefix: string,
+    noun: string
+  ): void {
+    if (items.length === 0) {
+      this.output.out(`No ${noun} yet.`);
       return;
     }
-    this.output.out('Blog posts:');
-    this.postData.forEach((p) => {
+    this.output.out(`${noun[0].toUpperCase() + noun.slice(1)}:`);
+    items.forEach((p) => {
       const pad = ' '.repeat(Math.max(1, 28 - p.slug.length));
       this.output.outHTML(
-        `  ${p.date}  <a href="${this.base}blog/${p.slug}">${p.slug}</a>${pad}${p.title}`
+        `  ${p.date}  <a href="${this.base}${urlPrefix}/${p.slug}">${p.slug}</a>${pad}${p.title}`
       );
     });
   }
 
-  private openPost(slug: string): void {
-    const post = this.postData.find((p) => p.slug === slug);
-    if (post) {
-      this.output.out(`Opening "${post.title}"…`, 'out-dim');
+  private openContent(
+    slug: string,
+    data: { slug: string; title: string }[],
+    urlPrefix: string,
+    noun: string
+  ): void {
+    const item = data.find((p) => p.slug === slug);
+    if (item) {
+      this.output.out(`Opening "${item.title}"…`, 'out-dim');
       setTimeout(() => {
-        window.location.href = this.base + 'blog/' + slug + '/';
+        window.location.href = `${this.base}${urlPrefix}/${slug}/`;
       }, 250);
     } else {
-      this.output.out('Post not found: ' + slug, 'out-err');
-      this.output.out("Type 'blog' to list available posts.", 'out-dim');
+      this.output.out(`${noun} not found: ${slug}`, 'out-err');
+      this.output.out(`Type '${urlPrefix}' to list available ${noun.toLowerCase()}s.`, 'out-dim');
     }
   }
 
@@ -187,17 +250,26 @@ export class Commands {
       ['blog <slug>', 'Open a post'],
       ['open <slug>', 'Open a post (alias)'],
       ['feed', 'Open Atom feed'],
-      ['rss', 'Alias for feed'],
       ['social', 'Links — GitHub, LinkedIn, email'],
+      ['projects', 'List projects'],
+      ['projects -w', 'Open projects listing in browser'],
+      ['projects <slug>', 'Open a project'],
+      ['timeline', 'Career timeline'],
+      ['whoami', 'Who are you?'],
       ['ls [path]', 'List directory contents'],
       ['cd [path]', 'Change directory'],
+      ['pwd', 'Print working directory'],
+      ['cat <file>', 'Open a file'],
       ['clear', 'Clear the terminal'],
+      ['history', 'Show session history'],
       ['date', 'Print current date'],
       ['echo <text>', 'Echo text'],
       ['theme [name]', 'List or switch color themes'],
+      ['man <cmd>', 'Manual page for a command'],
+      ['cowsay <text>', 'Important announcements'],
     ];
     this.output.out('Available commands:');
-    rows.forEach(([cmd, desc]) => this.output.out('  ' + cmd.padEnd(22) + desc));
+    rows.forEach(([cmd, desc]) => this.output.out('  ' + cmd.padEnd(24) + desc));
   }
 
   private about(_args: string[]): void {
@@ -230,9 +302,9 @@ export class Commands {
       this.output.out('Opening blog listing…', 'out-dim');
       setTimeout(() => window.open(this.base + 'blog/', '_self'), 150);
     } else if (flag) {
-      this.openPost(flag);
+      this.openContent(flag, this.postData, 'blog', 'Post');
     } else {
-      this.listPosts();
+      this.listContent(this.postData, 'blog', 'blog posts');
     }
   }
 
@@ -242,7 +314,7 @@ export class Commands {
   }
 
   private open(args: string[]): void {
-    if (args.length > 0) this.openPost(args[0]);
+    if (args.length > 0) this.openContent(args[0], this.postData, 'blog', 'Post');
     else this.output.out('Usage: open <slug>', 'out-err');
   }
 
@@ -320,6 +392,349 @@ export class Commands {
 
   private echo(args: string[]): void {
     this.output.out(args.join(' '));
+  }
+
+  private projects(args: string[]): void {
+    const flag = args[0];
+    if (flag === '-w' || flag === '--web') {
+      this.output.out('Opening projects listing…', 'out-dim');
+      setTimeout(() => window.open(this.base + 'projects/', '_self'), 150);
+    } else if (flag) {
+      this.openContent(flag, this.projectData, 'projects', 'Project');
+    } else {
+      this.listContent(this.projectData, 'projects', 'projects');
+    }
+  }
+
+  private timeline(_args: string[]): void {
+    const rows: [string, string][] = [
+      ['2024 – present', 'Software Engineer @ Acme Corp'],
+      ['2022 – 2024', 'Backend Developer @ Startup Inc'],
+      ['2018 – 2022', 'B.Sc. Computer Science, University of Somewhere'],
+    ];
+    this.output.out('Career timeline:');
+    this.output.gap();
+    rows.forEach(([period, role]) => {
+      this.output.out(`  ${period.padEnd(16)}${role}`);
+    });
+  }
+
+  private whoami(_args: string[]): void {
+    const slug = this.getVisitorSlug();
+    const name = this.getVisitorName();
+    const info = CHARACTER_DATA[slug];
+    const g = (s: string) => `<span style="color:var(--green);font-weight:bold">${s}</span>`;
+    this.output.outHTML(g(name));
+    this.output.out('─'.repeat(Math.min(name.length + 2, 42)));
+    if (info) {
+      this.output.out(info.affiliation, 'out-dim');
+      this.output.gap();
+      this.output.out(info.description);
+    } else {
+      this.output.out('No further information available.', 'out-dim');
+    }
+  }
+
+  private pwd(_args: string[]): void {
+    this.output.out(this.getCwd());
+  }
+
+  private cat(args: string[]): void {
+    if (!args[0]) {
+      this.output.out('Usage: cat <file>', 'out-err');
+      return;
+    }
+    const target = args[0];
+    const lastSlash = target.lastIndexOf('/');
+    const fileName = lastSlash >= 0 ? target.slice(lastSlash + 1) : target;
+    const dirPart = lastSlash >= 0 ? target.slice(0, lastSlash) : null;
+
+    const dir = dirPart !== null ? this.resolveDir(dirPart) : this.getCwd();
+    if (dir === null) {
+      this.output.out(`cat: ${target}: No such file or directory`, 'out-err');
+      return;
+    }
+
+    const entries = this.fs[dir] ?? [];
+    if (!entries.includes(fileName)) {
+      this.output.out(`cat: ${target}: No such file or directory`, 'out-err');
+      return;
+    }
+
+    const slug = fileName.replace(/\.md$/, '');
+    if (dir === '~/blog') {
+      this.openContent(slug, this.postData, 'blog', 'Post');
+    } else if (dir === '~/projects') {
+      this.openContent(slug, this.projectData, 'projects', 'Project');
+    } else {
+      this.output.out(`cat: ${target}: binary or unreadable file`, 'out-dim');
+    }
+  }
+
+  private history(_args: string[]): void {
+    const hist = this.getHistory();
+    if (hist.length === 0) {
+      this.output.out('No commands in history.', 'out-dim');
+      return;
+    }
+    [...hist].reverse().forEach((cmd, i) => {
+      this.output.out(`  ${String(i + 1).padStart(3)}  ${cmd}`);
+    });
+  }
+
+  private bold(s: string): string {
+    return `<span style="font-weight:bold">${s}</span>`;
+  }
+
+  private dim(s: string): string {
+    return `<span style="color:var(--fg-dim)">${s}</span>`;
+  }
+
+  private man(args: string[]): void {
+    const cmd = args[0];
+    if (!cmd) {
+      this.output.out('Usage: man <command>', 'out-err');
+      this.output.out('Example: man blog', 'out-dim');
+      return;
+    }
+
+    const pages: Record<string, () => void> = {
+      help: () => {
+        this.output.outHTML(this.bold('help') + ' — show all available commands');
+        this.output.gap();
+        this.output.out('Usage: help');
+      },
+      about: () => {
+        this.output.outHTML(this.bold('about') + ' — display info about the site author');
+        this.output.gap();
+        this.output.out('Usage: about');
+      },
+      skills: () => {
+        this.output.outHTML(this.bold('skills') + ' — display the tech stack');
+        this.output.gap();
+        this.output.out('Usage: skills');
+      },
+      cv: () => {
+        this.output.outHTML(this.bold('cv') + ' — open the CV PDF in a new tab');
+        this.output.gap();
+        this.output.out('Usage: cv');
+      },
+      blog: () => {
+        this.output.outHTML(this.bold('blog') + ' — list and navigate blog posts');
+        this.output.gap();
+        this.output.out('Usage: blog [options | slug]');
+        this.output.gap();
+        this.output.outHTML(
+          '  ' + this.dim('(no args)') + '       List all posts with dates and slugs'
+        );
+        this.output.outHTML(
+          '  ' + this.dim('-w, --web') + '       Open the blog listing page in the browser'
+        );
+        this.output.outHTML('  ' + this.dim('<slug>') + '          Navigate to a specific post');
+        this.output.gap();
+        this.output.out('See also: open, feed');
+      },
+      open: () => {
+        this.output.outHTML(
+          this.bold('open') + ' — open a blog post by slug (alias for blog <slug>)'
+        );
+        this.output.gap();
+        this.output.out('Usage: open <slug>');
+      },
+      feed: () => {
+        this.output.outHTML(this.bold('feed') + ' — open the Atom/RSS feed in a new tab');
+        this.output.gap();
+        this.output.out('Usage: feed');
+        this.output.out('       rss   (alias)');
+      },
+      rss: () => {
+        this.output.outHTML(this.bold('rss') + ' — alias for ' + this.bold('feed'));
+        this.output.gap();
+        this.output.out('See also: feed');
+      },
+      social: () => {
+        this.output.outHTML(this.bold('social') + ' — display social/contact links');
+        this.output.gap();
+        this.output.out('Usage: social');
+        this.output.gap();
+        this.output.out('  Shows GitHub, LinkedIn, and email (click to reveal).');
+      },
+      projects: () => {
+        this.output.outHTML(this.bold('projects') + ' — list and navigate projects');
+        this.output.gap();
+        this.output.out('Usage: projects [options | slug]');
+        this.output.gap();
+        this.output.outHTML('  ' + this.dim('(no args)') + '       List all projects');
+        this.output.outHTML(
+          '  ' + this.dim('-w, --web') + '       Open the projects listing page in the browser'
+        );
+        this.output.outHTML('  ' + this.dim('<slug>') + '          Navigate to a specific project');
+      },
+      timeline: () => {
+        this.output.outHTML(this.bold('timeline') + ' — display career and education timeline');
+        this.output.gap();
+        this.output.out('Usage: timeline');
+      },
+      whoami: () => {
+        this.output.outHTML(this.bold('whoami') + ' — show info about your current character');
+        this.output.gap();
+        this.output.out('Usage: whoami');
+        this.output.gap();
+        this.output.out(
+          '  Your identity is assigned at first visit based on your browser fingerprint.'
+        );
+        this.output.out('  99 Star Wars characters are possible.');
+      },
+      pwd: () => {
+        this.output.outHTML(this.bold('pwd') + ' — print working directory');
+        this.output.gap();
+        this.output.out('Usage: pwd');
+        this.output.gap();
+        this.output.out('See also: ls, cd');
+      },
+      cat: () => {
+        this.output.outHTML(
+          this.bold('cat') + ' — open a file (navigates to blog post or project)'
+        );
+        this.output.gap();
+        this.output.out('Usage: cat <file>');
+        this.output.gap();
+        this.output.out('  cat hello-world.md         open post (from ~/blog)');
+        this.output.out('  cat blog/hello-world.md    open post (from anywhere)');
+        this.output.gap();
+        this.output.out('See also: ls, cd, blog, projects');
+      },
+      ls: () => {
+        this.output.outHTML(this.bold('ls') + ' — list directory contents');
+        this.output.gap();
+        this.output.out('Usage: ls [path]');
+        this.output.gap();
+        this.output.out(
+          '  Directories are shown in green. Omit path to list the current directory.'
+        );
+        this.output.gap();
+        this.output.out('See also: cd, pwd, cat');
+      },
+      cd: () => {
+        this.output.outHTML(this.bold('cd') + ' — change the working directory');
+        this.output.gap();
+        this.output.out('Usage: cd [path]');
+        this.output.gap();
+        this.output.outHTML('  ' + this.dim('(no args)') + '    Go to home (~)');
+        this.output.outHTML('  ' + this.dim('..') + '           Go up one level');
+        this.output.outHTML('  ' + this.dim('-') + '            Go to previous directory');
+        this.output.gap();
+        this.output.out('See also: ls, pwd');
+      },
+      history: () => {
+        this.output.outHTML(this.bold('history') + ' — show commands typed this session');
+        this.output.gap();
+        this.output.out('Usage: history');
+        this.output.gap();
+        this.output.out('  Commands are listed oldest-first with sequential numbers.');
+      },
+      clear: () => {
+        this.output.outHTML(this.bold('clear') + ' — clear the terminal output');
+        this.output.gap();
+        this.output.out('Usage: clear');
+        this.output.gap();
+        this.output.out('  Tip: Ctrl+L does the same thing.');
+      },
+      date: () => {
+        this.output.outHTML(this.bold('date') + ' — print the current date and time');
+        this.output.gap();
+        this.output.out('Usage: date');
+      },
+      echo: () => {
+        this.output.outHTML(this.bold('echo') + ' — print text to the terminal');
+        this.output.gap();
+        this.output.out('Usage: echo <text>');
+      },
+      theme: () => {
+        this.output.outHTML(this.bold('theme') + ' — list or switch color themes');
+        this.output.gap();
+        this.output.out('Usage: theme [name]');
+        this.output.gap();
+        this.output.outHTML(
+          '  ' + this.dim('(no args)') + '    List themes and show the active one'
+        );
+        this.output.outHTML('  ' + this.dim('<name>') + '       Switch to the named theme');
+        this.output.gap();
+        this.output.out('  Available: ' + [...THEMES].join(', '));
+      },
+      man: () => {
+        this.output.outHTML(this.bold('man') + ' — show the manual page for a command');
+        this.output.gap();
+        this.output.out('Usage: man <command>');
+        this.output.gap();
+        this.output.out('  Tab-completes command names.');
+      },
+      vim: () => {
+        this.output.outHTML(this.bold('vim') + ' — open vim');
+        this.output.gap();
+        this.output.out('Usage: vim [file]');
+        this.output.gap();
+        this.output.out('  Famous for being impossible to exit. You have been warned.');
+        this.output.out('  Type :q! to attempt escape.');
+      },
+      nano: () => {
+        this.output.outHTML(this.bold('nano') + ' — command not found');
+        this.output.gap();
+        this.output.out("  nano isn't installed. Have you tried vim?");
+        this.output.gap();
+        this.output.out('See also: vim');
+      },
+      cowsay: () => {
+        this.output.outHTML(this.bold('cowsay') + ' — let a cow deliver your message');
+        this.output.gap();
+        this.output.out('Usage: cowsay <text>');
+        this.output.gap();
+        this.output.out('  For important announcements only.');
+      },
+    };
+
+    const page = pages[cmd];
+    if (!page) {
+      this.output.out(`No manual entry for ${cmd}`, 'out-err');
+    } else {
+      page();
+    }
+  }
+
+  private vim(args: string[]): void {
+    const file = args[0] ?? 'untitled';
+    const g = (s: string) => `<span style="color:var(--fg-dim)">${s}</span>`;
+    this.output.out('');
+    this.output.out('~');
+    this.output.out('~');
+    this.output.out('~');
+    this.output.out(`"${file}" [New File] 0L, 0C`);
+    this.output.out('-- INSERT --');
+    this.output.outHTML(
+      `${g('You appear to be stuck. Type ')}` +
+        `<span style="font-weight:bold">:q!</span>` +
+        `${g(" to exit. (It won't work here.)")}`
+    );
+  }
+
+  private nano(_args: string[]): void {
+    this.output.out("nano: command not found. Did you mean 'vim'?", 'out-err');
+  }
+
+  private cowsay(args: string[]): void {
+    const message = args.join(' ') || 'Moo';
+    const len = message.length;
+    const top = ' ' + '_'.repeat(len + 2);
+    const mid = `< ${message} >`;
+    const bot = ' ' + '-'.repeat(len + 2);
+    this.output.out(top);
+    this.output.out(mid);
+    this.output.out(bot);
+    this.output.out('        \\   ^__^');
+    this.output.out('         \\  (oo)\\_______');
+    this.output.out('            (__)\\       )\\/\\');
+    this.output.out('                ||----w |');
+    this.output.out('                ||     ||');
   }
 
   private sudo(_args: string[]): void {

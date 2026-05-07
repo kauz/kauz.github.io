@@ -5,19 +5,18 @@ interface Props {
   title: string;
   date: Date;
   description?: string;
+  backHref?: string;
+  backLabel?: string;
 }
-const { title, date, description } = Astro.props;
+const { title, date, description, backHref, backLabel } = Astro.props;
+const resolvedBackHref = backHref ?? `${import.meta.env.BASE_URL}blog/`;
+const resolvedBackLabel = backLabel ?? '← blog';
 const dateStr = date.toISOString().slice(0, 10);
 ---
 
 <BaseLayout title={`${title} — apopov.dev`} description={description}>
   <main class="blog-wrap">
-    <a
-      class="back"
-      href={`${import.meta.env.BASE_URL}blog/`}
-      id="back-link"
-      aria-label="Back to blog">← blog</a
-    >
+    <a class="back" href={resolvedBackHref} id="back-link" aria-label="Back">{resolvedBackLabel}</a>
     <article>
       <header class="post-header">
         <h1>{title}</h1>

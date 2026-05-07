@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import BlogLayout from '../../layouts/BlogLayout.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => !data.draft);
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const backHref = `${import.meta.env.BASE_URL}projects/`;
+---
+
+<BlogLayout
+  title={project.data.title}
+  date={project.data.date}
+  description={project.data.description}
+  backHref={backHref}
+  backLabel="← projects"
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </Fragment>
+  {
+    project.data.tech && project.data.tech.length > 0 && (
+      <p class="post-tech">{project.data.tech.join(' · ')}</p>
+    )
+  }
+  {
+    project.data.url && (
+      <p>
+        <a href={project.data.url} target="_blank" rel="noopener">
+          ↗ {project.data.url}
+        </a>
+      </p>
+    )
+  }
+  <Content />
+</BlogLayout>

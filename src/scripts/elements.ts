@@ -11,5 +11,6 @@ export function selectElements(): IAppElements {
     promptEl: get('prompt'),
     titleEl: get('t-title'),
     postData: JSON.parse(get('terminal').dataset.posts ?? '[]'),
+    projectData: JSON.parse(get('terminal').dataset.projects ?? '[]'),
   };
 }

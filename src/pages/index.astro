@@ -93,11 +93,11 @@ const projectData = projectEntries.map((p) => ({
 
   <script>
     import { App } from '../scripts/app';
-    import { Visitor } from '../scripts/visitor';
+    import { User } from '../scripts/user';
     import { selectElements } from '../scripts/elements';
 
-    const visitor = await Visitor.create();
-    const app = new App(visitor, selectElements());
+    const user = await User.create();
+    const app = new App(user, selectElements());
     await app.boot();
   </script>
 </BaseLayout>

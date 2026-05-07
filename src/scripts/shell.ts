@@ -1,81 +1,51 @@
-import type { IOutput, Post, Project } from './types.ts';
-import { Commands } from './commands.ts';
-
-interface Ctx {
-  postData: Post[];
-  projectData: Project[];
-  output: IOutput;
-  visitorSlug: string;
-  visitorName: string;
-  getHistory: () => readonly string[];
-  onCwdChange: () => void;
-}
+import type { AppCtx, ShellState } from './types.ts';
+import { FileSystem } from './file-system.ts';
+import { Commands, COMMAND_NAMES, THEMES } from './commands.ts';
 
 export class Shell {
-  private readonly output: IOutput;
-  private readonly onCwdChange: () => void;
+  private readonly state: ShellState;
+  private readonly fileSystem: FileSystem;
   private readonly commands: Commands;
-  private cwd = '~';
-  private prevCwd = '~';
-  private promptSymbol = '$';
-  private visitorSlug: string;
-  private readonly visitorName: string;
+  private readonly completions: Record<string, () => string[]>;
+  private readonly aliases: Record<string, string> = { rss: 'feed' };
 
-  constructor(ctx: Ctx) {
-    this.output = ctx.output;
-    this.visitorSlug = ctx.visitorSlug;
-    this.visitorName = ctx.visitorName;
-    this.onCwdChange = ctx.onCwdChange;
-    const base = import.meta.env.BASE_URL;
-    const slugs = ctx.postData.map((p) => p.slug);
+  constructor(ctx: AppCtx) {
+    this.state = { userSlug: ctx.userSlug, promptSymbol: '$' };
+    const blogSlugs = ctx.postData.map((p) => p.slug);
     const projectSlugs = ctx.projectData.map((p) => p.slug);
-    const fs: Record<string, string[]> = {
-      '~': ['blog/', 'projects/'],
-      '~/blog': slugs.map((s) => s + '.md'),
-      '~/projects': projectSlugs.map((s) => s + '.md'),
+    this.fileSystem = new FileSystem(blogSlugs, projectSlugs, ctx.onCwdChange);
+    this.commands = new Commands(ctx, this.state, this.fileSystem);
+    this.completions = {
+      blog: () => ['-w', ...blogSlugs],
+      open: () => blogSlugs,
+      cd: () => this.fileSystem.entries(this.fileSystem.getCwd()),
+      ls: () => this.fileSystem.entries(this.fileSystem.getCwd()),
+      cat: () => this.fileSystem.entries(this.fileSystem.getCwd()),
+      theme: () => [...THEMES],
+      projects: () => ['-w', ...projectSlugs],
+      man: () => [...COMMAND_NAMES],
     };
-    this.commands = new Commands({
-      postData: ctx.postData,
-      projectData: ctx.projectData,
-      output: ctx.output,
-      getCwd: () => this.cwd,
-      setCwd: (cwd) => this.setCwd(cwd),
-      getPrevCwd: () => this.prevCwd,
-      base,
-      fs,
-      slugs,
-      projectSlugs,
-      getVisitorSlug: () => this.visitorSlug,
-      getVisitorName: () => this.visitorName,
-      getHistory: ctx.getHistory,
-    });
   }
 
   getPrompt(): string {
-    return `${this.visitorSlug}@holonet:${this.cwd}${this.promptSymbol}`;
+    return `${this.state.userSlug}@holonet:${this.fileSystem.getCwd()}${this.state.promptSymbol}`;
   }
 
-  dispatch(name: string, args: string[]): boolean {
-    if (name === 'ivanna') {
-      this.promptSymbol = '💜';
-      this.visitorSlug = 'ivanna';
-      this.onCwdChange();
-      return true;
-    }
-    return this.commands.dispatch(name, args);
+  dispatch(cmd: string, args: string[]): boolean {
+    const name = this.aliases[cmd] ?? cmd;
+    const method = this.commands[name as keyof Commands];
+    if (typeof method !== 'function') return false;
+    method.call(this.commands, args);
+    return true;
   }
 
   commandNames(): readonly string[] {
-    return this.commands.commandNames();
+    return COMMAND_NAMES;
   }
 
   complete(cmd: string, partial: string): string[] {
-    return this.commands.complete(cmd, partial);
-  }
-
-  private setCwd(cwd: string): void {
-    this.prevCwd = this.cwd;
-    this.cwd = cwd;
-    this.onCwdChange();
+    const getCandidates = this.completions[cmd];
+    if (!getCandidates) return [];
+    return getCandidates().filter((s) => s.startsWith(partial));
   }
 }

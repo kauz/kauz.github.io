@@ -15,7 +15,7 @@ export interface IOutput {
   clear(): void;
 }
 
-export interface IVisitor {
+export interface IUser {
   name: string;
   slug: string;
 }
@@ -30,4 +30,19 @@ export interface IAppElements {
   titleEl: HTMLElement;
   postData: Post[];
   projectData: Project[];
+}
+
+export interface AppCtx {
+  postData: Post[];
+  projectData: Project[];
+  io: IOutput;
+  userSlug: string;
+  userName: string;
+  getHistory: () => readonly string[];
+  onCwdChange: () => void;
+}
+
+export interface ShellState {
+  userSlug: string;
+  promptSymbol: string;
 }

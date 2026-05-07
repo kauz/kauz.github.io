@@ -2,6 +2,7 @@ dist/
 .output/
 .astro/
 .vercel/
+.claude/
 node_modules/
 .env
 .env.*

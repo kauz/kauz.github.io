@@ -1,9 +1,9 @@
 import { Terminal } from './terminal';
 import { Shell } from './shell';
-import type { IVisitor, IAppElements } from './types';
+import type { IUser, IAppElements } from './types';
 
 export class App {
-  public visitor: IVisitor;
+  public user: IUser;
   private terminal!: Terminal;
   private shell!: Shell;
   private history: string[] = [];
@@ -30,8 +30,8 @@ export class App {
   private promptEl: HTMLElement;
   private titleEl: HTMLElement;
 
-  constructor(visitor: IVisitor, elements: IAppElements) {
-    this.visitor = visitor;
+  constructor(user: IUser, elements: IAppElements) {
+    this.user = user;
     this.input = elements.input;
     this.cmdTyped = elements.cmdTyped;
     this.blinkCursor = elements.blinkCursor;
@@ -42,9 +42,9 @@ export class App {
     this.shell = new Shell({
       postData: elements.postData,
       projectData: elements.projectData,
-      output: this.terminal,
-      visitorSlug: visitor.slug,
-      visitorName: visitor.name,
+      io: this.terminal,
+      userSlug: user.slug,
+      userName: user.name,
       getHistory: () => this.history,
       onCwdChange: () => {
         const prompt = this.shell.getPrompt();

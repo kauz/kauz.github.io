@@ -18,7 +18,7 @@ src/
   styles/
     global.css         - all styles (terminal + prose)
 public/
-  cv.pdf               - put your CV here (served at /cv.pdf)
+  cv.pdf               - served at /cv.pdf
 ```
 
 ## Adding a blog post

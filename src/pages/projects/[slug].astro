@@ -20,14 +20,14 @@ const ogImage = `/og/projects/${project.id}.png`;
 
 const jsonLd: Record<string, unknown> = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareSourceCode',
+  '@type': 'CreativeWork',
   name: project.data.title,
   ...(project.data.description && { description: project.data.description }),
   dateCreated: project.data.date.toISOString().slice(0, 10),
   url: projectUrl,
   image: `${base}${ogImage}`,
-  ...(project.data.url && { codeRepository: project.data.url }),
-  ...(project.data.tech?.length && { programmingLanguage: project.data.tech }),
+  ...(project.data.url && { sameAs: project.data.url }),
+  ...(project.data.tech?.length && { keywords: project.data.tech.join(', ') }),
   author: { '@type': 'Person', name: 'Artem Popov', url: base },
 };
 ---

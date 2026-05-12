@@ -1,0 +1,6 @@
+---
+const { schema } = Astro.props;
+const json = JSON.stringify(schema);
+---
+
+<Fragment set:html={`<script type="application/ld+json">${json}</script>`} />

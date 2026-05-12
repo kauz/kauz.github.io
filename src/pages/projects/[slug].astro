@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BlogLayout from '../../layouts/BlogLayout.astro';
+import JsonLd from '../../components/JsonLd.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.draft);
@@ -13,6 +14,22 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 const { Content } = await render(project);
 const backHref = `${import.meta.env.BASE_URL}projects/`;
+const base = Astro.site?.toString().replace(/\/$/, '') ?? 'https://kauz.github.io';
+const projectUrl = `${base}/projects/${project.id}`;
+const ogImage = `/og/projects/${project.id}.png`;
+
+const jsonLd: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: project.data.title,
+  ...(project.data.description && { description: project.data.description }),
+  dateCreated: project.data.date.toISOString().slice(0, 10),
+  url: projectUrl,
+  image: `${base}${ogImage}`,
+  ...(project.data.url && { codeRepository: project.data.url }),
+  ...(project.data.tech?.length && { programmingLanguage: project.data.tech }),
+  author: { '@type': 'Person', name: 'Artem Popov', url: base },
+};
 ---
 
 <BlogLayout
@@ -21,6 +38,7 @@ const backHref = `${import.meta.env.BASE_URL}projects/`;
   description={project.data.description}
   backHref={backHref}
   backLabel="← projects"
+  ogImage={ogImage}
 >
   <Fragment slot="head">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,6 +47,7 @@ const backHref = `${import.meta.env.BASE_URL}projects/`;
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
+    <JsonLd schema={jsonLd} />
   </Fragment>
   {
     project.data.tech && project.data.tech.length > 0 && (

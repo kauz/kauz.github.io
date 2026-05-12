@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BlogLayout from '../../layouts/BlogLayout.astro';
+import JsonLd from '../../components/JsonLd.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -12,9 +13,30 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const base = Astro.site?.toString().replace(/\/$/, '') ?? 'https://kauz.github.io';
+const postUrl = `${base}/blog/${post.id}`;
+const ogImage = `/og/blog/${post.id}.png`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: post.data.title,
+  ...(post.data.description && { description: post.data.description }),
+  datePublished: post.data.date.toISOString().slice(0, 10),
+  dateModified: post.data.date.toISOString().slice(0, 10),
+  url: postUrl,
+  image: `${base}${ogImage}`,
+  author: { '@type': 'Person', name: 'Artem Popov', url: base },
+  publisher: { '@type': 'Person', name: 'Artem Popov', url: base },
+};
 ---
 
-<BlogLayout title={post.data.title} date={post.data.date} description={post.data.description}>
+<BlogLayout
+  title={post.data.title}
+  date={post.data.date}
+  description={post.data.description}
+  ogImage={ogImage}
+>
   <Fragment slot="head">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,6 +44,7 @@ const { Content } = await render(post);
       href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
+    <JsonLd schema={jsonLd} />
   </Fragment>
   <Content />
 </BlogLayout>

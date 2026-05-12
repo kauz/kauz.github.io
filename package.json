@@ -22,8 +22,10 @@
     ]
   },
   "dependencies": {
+    "@resvg/resvg-js": "2.6.2",
     "astro": "6.1.10",
     "lil-gui": "0.21.0",
+    "satori": "0.26.0",
     "suncalc": "1.9.0",
     "three": "0.184.0"
   },
